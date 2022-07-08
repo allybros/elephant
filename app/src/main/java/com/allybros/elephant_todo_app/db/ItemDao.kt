@@ -14,12 +14,12 @@ import androidx.room.Query
 interface ItemDao {
 
     @Query("SELECT * FROM item where date = :date")
-    fun getNotesByDates(date: String): List<Item>
+    suspend fun getNotesByDates(date: String): List<Item>
 
     @Insert
-    fun insertItem(item: Item)
+    suspend fun insertItem(item: Item)
 
     @Delete
-    fun deleteItem(item: Item)
+    suspend fun deleteItem(item: Item)
 
 }
