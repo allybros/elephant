@@ -11,10 +11,10 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Item(
-    @PrimaryKey val uid: Int,
-    @ColumnInfo(name = "note") val note: String?,
-    @ColumnInfo(name = "date") val date: String?,
-    @ColumnInfo(name = "time") val time: String?,
-    @ColumnInfo(name = "is_complete") val isComplete: Boolean?,
-    @ColumnInfo(name = "has_time") val hasTime: Boolean?
+    @PrimaryKey(autoGenerate = true) val uid: Int? = null,
+    @ColumnInfo(name = "note") var note: String? = "",
+    @ColumnInfo(name = "date") var date: String? = "",
+    @ColumnInfo(name = "time") var time: String? = "",
+    @ColumnInfo(name = "is_complete") var isComplete: Boolean? = false,
+    @ColumnInfo(name = "has_time") var hasTime: Boolean? = false
 )
