@@ -1,4 +1,4 @@
-package com.allybros.elephant_todo_app.ui.screen.add
+package com.allybros.elephant_todo_app.ui.screen.addDialog
 
 import android.app.TimePickerDialog
 import android.util.Log
@@ -20,7 +20,7 @@ import androidx.compose.ui.window.Dialog
 import com.allybros.elephant_todo_app.addZeroStart
 import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.ui.theme.Purple500
-import com.allybros.elephant_todo_app.ui.theme.Teal200
+import javax.inject.Inject
 
 
 /**
@@ -29,7 +29,11 @@ import com.allybros.elephant_todo_app.ui.theme.Teal200
 
 
 @Composable
-fun AddDialog(setShowDialog: (Boolean) -> Unit, date: String) {
+fun AddDialog (
+    setShowDialog: (Boolean) -> Unit,
+    date: String,
+    buttonClicked: (item: Item)->Unit
+) {
     val padding = 16.dp
 
     var note: String by remember {
@@ -98,7 +102,8 @@ fun AddDialog(setShowDialog: (Boolean) -> Unit, date: String) {
 
                     Button(
                         onClick = {
-                            onCompleted(item)
+                            buttonClicked(item)
+                            setShowDialog(false)
                         },
                         shape = RoundedCornerShape(50.dp),
                         modifier = Modifier
@@ -113,10 +118,6 @@ fun AddDialog(setShowDialog: (Boolean) -> Unit, date: String) {
         }
 
     }
-}
-
-fun onCompleted(item: Item) {
-    Log.d("AddDialog",item.toString())
 }
 
 @Composable

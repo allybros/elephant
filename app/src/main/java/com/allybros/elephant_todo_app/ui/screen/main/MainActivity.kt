@@ -1,8 +1,11 @@
 package com.allybros.elephant_todo_app.ui.screen.main
 
+import android.app.DatePickerDialog
 import android.os.Bundle
+import android.widget.DatePicker
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,25 +14,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.constraintlayout.compose.ChainStyle
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
-import com.allybros.elephant_todo_app.ui.screen.add.AddDialog
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.allybros.elephant_todo_app.ui.screen.addDialog.AddDialog
 import com.allybros.elephant_todo_app.ui.theme.Elephant_todo_appTheme
+import com.allybros.elephant_todo_app.ui.theme.Purple500
+import com.allybros.elephant_todo_app.ui.theme.Purple700
 import dagger.hilt.android.AndroidEntryPoint
+import java.text.DateFormatSymbols
+import java.util.*
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -43,163 +51,203 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
-    val showDialog =  remember { mutableStateOf(false) }
-    val taskCount by remember { mutableStateOf("0 tasks") }
-    val dayName by remember { mutableStateOf("dayName,") }
-    val date by remember { mutableStateOf("date") }
+fun MainScreen(
+    viewModel: MainViewModel = hiltViewModel()
+) {
+    val showDialog = remember { mutableStateOf(false) }
+    val dayName: String
+    var date: String
+    val noteList by viewModel.noteListLiveData.collectAsState()
+    // Fetching the Local Context
+    val mContext = LocalContext.current
+
+    // Declaring integer values
+    // for year, month and day
+    val mYear: Int
+    val mMonth: Int
+    val mDay: Int
+
+    // Initializing a Calendar
+    val mCalendar = Calendar.getInstance()
+
+    // Fetching current year, month and day
+    mYear = mCalendar.get(Calendar.YEAR)
+    mMonth = mCalendar.get(Calendar.MONTH)
+    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
+
+    mCalendar.time = Date()
+    val dayNames: Array<String> = DateFormatSymbols().weekdays
+    val monthNames: Array<String> = DateFormatSymbols().months
+    dayName = dayNames[mCalendar.get(Calendar.MONTH)].plus( ",")
+    date = mDay.toString().plus(" "+ monthNames[mCalendar.get(Calendar.MONTH)])
+
+
+    // Declaring a string value to
+    // store date in string format
+    val mDate = remember { mutableStateOf("") }
+
+    // Declaring DatePickerDialog and setting
+    // initial values as current values (present year, month and day)
+    val mDatePickerDialog = DatePickerDialog(
+        mContext,
+        { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
+            mDate.value = "$mDayOfMonth/${mMonth+1}/$mYear"
+        }, mYear, mMonth, mDay
+    )
+
 
     if(showDialog.value)
         AddDialog(
-            setShowDialog = {
-            showDialog.value = it
-        }, "10/10/2022")
-
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        val (appBar, list, addNewButton, noteCount) = createRefs()
-
-        ElephantAppBar(
-            onBackClicked = {  },
-            onForwardClicked = {  },
-            dayName,
-            date,
-            modifier = Modifier
-                .constrainAs(appBar){
-                    top.linkTo(parent.top)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
+            setShowDialog = { showDialog.value = it },
+            date = "10/10/2022",
+            buttonClicked = {
+                viewModel.addItem(it)
+                viewModel.getNotes()
+            }
         )
 
-        val itemsList = (0..180).toList()
-        LazyColumn(
-            modifier = Modifier
-                .constrainAs(list){
-                    top.linkTo(appBar.bottom)
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-                .padding(bottom = 102.dp)
-        ){
-            items(itemsList){
+    Scaffold(
+        topBar = {
+            ElephantAppBar(
+            onBackClicked = {  },
+            onForwardClicked = {  },
+            dateClicked = { mDatePickerDialog.show() },
+            dayName,
+            date
+        ) },
+        bottomBar = {
+            ElephantBottomBar(
+                addNew = { showDialog.value = true },
+                taskCount = "${noteList.size} tasks"
+            )
+        }
+    ) {
+        LazyColumn{
+            items(noteList){
                 Text(
-                    text = "$it",
+                    text = "${it.note}",
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-
         }
+    }
+}
 
-
-        Box(
-            modifier = Modifier
-                .constrainAs(addNewButton){
-                    bottom.linkTo(parent.bottom)
-                    end.linkTo(parent.end)
-                }
-        ) {
-            AddNew { showDialog.value = true }
+@Composable
+fun ElephantBottomBar(
+    addNew: ()-> Unit,
+    taskCount: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 24.dp)
+    ) {
+        Box{
+            AddNew { addNew.invoke() }
         }
-        Box(
-            modifier = Modifier
-                .constrainAs(noteCount) {
-                    bottom.linkTo(parent.bottom)
-                    start.linkTo(parent.start)
-                }
-                .padding(12.dp)
-
-        ){
+        Spacer(modifier = Modifier.weight(1f))
+        Box{
             Text(
                 text = taskCount,
                 fontSize = 24.sp
             )
         }
-
-        createVerticalChain(appBar,list,chainStyle = ChainStyle.Packed(0F))
     }
-
 }
 
 @Composable
 fun ElephantAppBar(
     onBackClicked: ()-> Unit,
     onForwardClicked: ()-> Unit,
+    dateClicked: ()-> Unit,
     dayNameText: String,
-    dateText: String,
-    modifier: Modifier
+    dateText: String
 ) {
-    TopAppBar(modifier = modifier) {
+    TopAppBar(
+        backgroundColor = Color.White
+    ) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            val (backArrow, forwardArrow, dayName, date) = createRefs()
+            val (backArrow, forwardArrow, headerText) = createRefs()
 
-            Button(
-                onClick = { onBackClicked.invoke() },
+            DirectionButton(
+                onButtonClicked = { onBackClicked.invoke() },
                 modifier = Modifier
                     .constrainAs(backArrow){
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
-                    }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "backArrow",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            Button(
-                onClick = { onForwardClicked.invoke() },
+                    },
+                imageVector = Icons.Filled.ArrowBack,
+                description = "backArrow",
+                iconModifier = Modifier.size(24.dp)
+            )
+
+            DirectionButton(
+                onButtonClicked = { onForwardClicked.invoke() },
                 modifier = Modifier
                     .constrainAs(forwardArrow){
                         end.linkTo(parent.end)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
-                    }
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ArrowForward,
-                    contentDescription = "forwardArrow",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+                    },
+                imageVector = Icons.Filled.ArrowForward,
+                description = "forwardArrow",
+                iconModifier = Modifier.size(24.dp)
+            )
 
-            Text(
-                text = dayNameText,
-                fontWeight = FontWeight.Bold,
+            Row(
                 modifier = Modifier
-                    .constrainAs(dayName){
+                    .constrainAs(headerText) {
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                         start.linkTo(backArrow.end)
-                        end.linkTo(date.start)
-                    }
-            )
-
-            Text(
-                text = dateText,
-                modifier = Modifier
-                    .constrainAs(date) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        start.linkTo(dayName.end)
                         end.linkTo(forwardArrow.start)
                     }
-                    .padding(start = 4.dp)
-            )
-
-
-
-
-
+                    .fillMaxHeight()
+                    .clickable { dateClicked.invoke() },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = dayNameText,
+                    fontWeight = FontWeight.Bold,
+                    color = Purple500,
+                    fontSize = 18.sp
+                )
+                Text(
+                    text = dateText,
+                    color = Purple500,
+                    fontSize = 14.sp
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun DirectionButton(
+    onButtonClicked: () -> Unit,
+    modifier: Modifier,
+    imageVector: ImageVector,
+    description: String,
+    iconModifier: Modifier
+) {
+    OutlinedButton(
+        onClick = { onButtonClicked.invoke() },
+        modifier = modifier.fillMaxHeight(),
+        border = null
+    ) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = description,
+            modifier = iconModifier,
+            tint = Purple700
+        )
     }
 }
 

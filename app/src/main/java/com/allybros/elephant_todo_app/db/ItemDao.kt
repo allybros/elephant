@@ -16,6 +16,9 @@ interface ItemDao {
     @Query("SELECT * FROM item where date = :date")
     suspend fun getNotesByDates(date: String): List<Item>
 
+    @Query("SELECT * FROM item")
+    fun getNotes(): List<Item>
+
     @Insert
     suspend fun insertItem(item: Item)
 
