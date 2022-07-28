@@ -3,8 +3,10 @@ package com.allybros.elephant_todo_app.ui.screen.main
 import android.app.DatePickerDialog
 import android.os.Bundle
 import android.widget.DatePicker
+import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -101,6 +103,7 @@ fun MainScreen(
     )
 
 
+
     if(showDialog.value)
         AddDialog(
             setShowDialog = { showDialog.value = it },
@@ -127,7 +130,10 @@ fun MainScreen(
             )
         }
     ) {
-        LazyColumn{
+        LazyColumn(
+            modifier = Modifier
+                .padding(top = 8.dp, bottom = 40.dp)
+        ){
             items(noteList){
                 NoteRow(it)
             }
@@ -149,21 +155,48 @@ fun NoteRow(item: Item) {
                 vertical = 8.dp
             )
         ) {
-            Divider(color = Purple100, thickness = 1.dp)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically){
+                    ElephantCheckbox()
+                    Text(
+                        text = item.note.toString(),
+                        fontSize = 20.sp,
+                        color = Purple650,
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = item.note.toString(),
-                    fontSize = 24.sp,
-                    color = Purple700,
-                    modifier = Modifier.padding(start = 16.dp)
+                    text = "Time",
+                    fontSize = 16.sp,
+                    color = Purple650
                 )
             }
+            Divider(
+                modifier = Modifier.padding(top = 16.dp),
+                color = Purple100,
+                thickness = 1.dp
+            )
         }
-
-
     }
-
 }
+
+@Composable
+fun ElephantCheckbox() {
+    val checkedState = remember { mutableStateOf(true) }
+    Checkbox(
+        checked = checkedState.value,
+        onCheckedChange = { checkedState.value = it },
+        colors = CheckboxDefaults.colors(
+            Purple650,
+            Purple650
+        )
+    )
+}
+
 
 @Composable
 fun ElephantBottomBar(
@@ -175,13 +208,13 @@ fun ElephantBottomBar(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Column {
+        Column(modifier = Modifier.background(Color.White)) {
             Divider(color = Purple100, thickness = 1.dp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = taskCount,
                     fontSize = 24.sp,
-                    color = Purple700,
+                    color = Purple800,
                     modifier = Modifier.padding(start = 16.dp)
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -251,12 +284,12 @@ fun ElephantAppBar(
                 Text(
                     text = dayNameText,
                     fontWeight = FontWeight.Bold,
-                    color = Purple500,
+                    color = Purple650,
                     fontSize = 18.sp
                 )
                 Text(
                     text = dateText,
-                    color = Purple500,
+                    color = Purple650,
                     fontSize = 14.sp
                 )
             }
@@ -297,11 +330,13 @@ fun AddNew(onClicked: () -> Unit) {
                 imageVector = Icons.Filled.Add,
                 contentDescription = "New",
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(36.dp),
+                tint = Purple800
             )
             Text(
                 text = "Add New",
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                color = Purple800
             )
         }
     }
