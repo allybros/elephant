@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.DatePicker
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,20 +18,24 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.ui.screen.addDialog.AddDialog
-import com.allybros.elephant_todo_app.ui.theme.Elephant_todo_appTheme
-import com.allybros.elephant_todo_app.ui.theme.Purple500
-import com.allybros.elephant_todo_app.ui.theme.Purple700
+import com.allybros.elephant_todo_app.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.DateFormatSymbols
 import java.util.*
@@ -124,13 +129,40 @@ fun MainScreen(
     ) {
         LazyColumn{
             items(noteList){
-                Text(
-                    text = "${it.note}",
-                    modifier = Modifier.fillMaxWidth()
-                )
+                NoteRow(it)
             }
         }
     }
+}
+
+@Composable
+fun NoteRow(item: Item) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+            .padding(
+                horizontal = 16.dp,
+                vertical = 8.dp
+            )
+        ) {
+            Divider(color = Purple100, thickness = 1.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = item.note.toString(),
+                    fontSize = 24.sp,
+                    color = Purple700,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            }
+        }
+
+
+    }
+
 }
 
 @Composable
@@ -142,17 +174,20 @@ fun ElephantBottomBar(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 24.dp)
     ) {
-        Box{
-            AddNew { addNew.invoke() }
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Box{
-            Text(
-                text = taskCount,
-                fontSize = 24.sp
-            )
+        Column {
+            Divider(color = Purple100, thickness = 1.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = taskCount,
+                    fontSize = 24.sp,
+                    color = Purple700,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                AddNew { addNew.invoke() }
+
+            }
         }
     }
 }
@@ -253,12 +288,7 @@ fun DirectionButton(
 
 @Composable
 fun AddNew(onClicked: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .wrapContentWidth()
-            .wrapContentHeight(),
-        contentAlignment = Alignment.Center
-    ) {
+    Box{
         OutlinedButton(
             onClick = { onClicked.invoke() },
             border = null
