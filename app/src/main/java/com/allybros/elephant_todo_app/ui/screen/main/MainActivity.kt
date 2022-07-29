@@ -1,13 +1,12 @@
 package com.allybros.elephant_todo_app.ui.screen.main
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.os.Bundle
 import android.widget.DatePicker
-import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,21 +19,17 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.allybros.elephant_todo_app.addZeroStart
 import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.ui.screen.addDialog.AddDialog
 import com.allybros.elephant_todo_app.ui.theme.*
@@ -61,56 +56,47 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel()
 ) {
-    val showDialog = remember { mutableStateOf(false) }
-    val dayName: String
-    var date: String
-    val noteList by viewModel.noteListLiveData.collectAsState()
-    // Fetching the Local Context
-    val mContext = LocalContext.current
-
-    // Declaring integer values
-    // for year, month and day
-    val mYear: Int
-    val mMonth: Int
-    val mDay: Int
-
-    // Initializing a Calendar
     val mCalendar = Calendar.getInstance()
+    val showDialog = remember { mutableStateOf(false) }
+    val dayName = remember {
+        val dayNames: Array<String> = DateFormatSymbols().weekdays
+        mutableStateOf(dayNames[mCalendar.get(Calendar.DAY_OF_WEEK)].plus( ","))
+    }
+    val date = remember {
+        val monthNames: Array<String> = DateFormatSymbols().months
+        mutableStateOf(
+            mCalendar
+                .get(Calendar.DAY_OF_MONTH)
+                .toString()
+                .plus(" ".plus(monthNames[mCalendar.get(Calendar.MONTH) + 1])))
+    }
 
-    // Fetching current year, month and day
-    mYear = mCalendar.get(Calendar.YEAR)
-    mMonth = mCalendar.get(Calendar.MONTH)
-    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
+    val mDate = remember {
+        val month = mCalendar.get(Calendar.MONTH)
+        val day = mCalendar.get(Calendar.DAY_OF_MONTH)
+        val year = mCalendar.get(Calendar.YEAR)
+        mutableStateOf("$day/${month+1}/$year")
+    }
 
-    mCalendar.time = Date()
-    val dayNames: Array<String> = DateFormatSymbols().weekdays
-    val monthNames: Array<String> = DateFormatSymbols().months
-    dayName = dayNames[mCalendar.get(Calendar.MONTH)].plus( ",")
-    date = mDay.toString().plus(" "+ monthNames[mCalendar.get(Calendar.MONTH)])
+    val noteList by viewModel.noteListLiveData.collectAsState()
 
-
-    // Declaring a string value to
-    // store date in string format
-    val mDate = remember { mutableStateOf("") }
-
-    // Declaring DatePickerDialog and setting
-    // initial values as current values (present year, month and day)
-    val mDatePickerDialog = DatePickerDialog(
-        mContext,
-        { _: DatePicker, mYear: Int, mMonth: Int, mDayOfMonth: Int ->
-            mDate.value = "$mDayOfMonth/${mMonth+1}/$mYear"
-        }, mYear, mMonth, mDay
+    val datePickerDialog = ElephantDatePickerDialog(
+        LocalContext.current,
+        callback = { pickedDay, pickedMonth, pickedYear ->
+            onDatePicked(pickedDay, pickedMonth, pickedYear, mDate, dayName, date, viewModel)
+        }
     )
+    viewModel.getNotes(mDate.value)
 
 
 
     if(showDialog.value)
         AddDialog(
             setShowDialog = { showDialog.value = it },
-            date = "10/10/2022",
+            date = mDate.value,
             buttonClicked = {
                 viewModel.addItem(it)
-                viewModel.getNotes()
+                viewModel.getNotes(date.value)
             }
         )
 
@@ -119,9 +105,9 @@ fun MainScreen(
             ElephantAppBar(
             onBackClicked = {  },
             onForwardClicked = {  },
-            dateClicked = { mDatePickerDialog.show() },
-            dayName,
-            date
+            dateClicked = { datePickerDialog.show() },
+            dayName.value,
+            date.value
         ) },
         bottomBar = {
             ElephantBottomBar(
@@ -141,6 +127,60 @@ fun MainScreen(
     }
 }
 
+fun onDatePicked(
+    pickedDay: Int,
+    pickedMonth: Int,
+    pickedYear: Int,
+    mDate: MutableState<String>,
+    dayName: MutableState<String>,
+    date: MutableState<String>,
+    viewModel: MainViewModel
+) {
+    mDate.value = "${pickedDay.toString().addZeroStart()}/${pickedMonth+1}/$pickedYear"
+    val calendar = Calendar.getInstance()
+    calendar.set(Calendar.DAY_OF_MONTH,pickedDay)
+    calendar.set(Calendar.MONTH,pickedMonth)
+    calendar.set(Calendar.YEAR,pickedYear)
+
+    viewModel.getNotes(mDate.value)
+    val dayNames: Array<String> = DateFormatSymbols().weekdays
+    val monthNames: Array<String> = DateFormatSymbols().months
+    dayName.value = dayNames[calendar.get(Calendar.DAY_OF_WEEK)].plus( ",")
+    date.value = pickedDay.toString().plus(" "+ monthNames[pickedMonth+1])
+}
+
+fun ElephantDatePickerDialog(
+    mContext: Context,
+    callback: (
+        pickedDay :Int,
+        pickedMonth: Int,
+        pickedYear: Int
+    ) -> Unit
+): DatePickerDialog {
+    // Declaring integer values
+    // for year, month and day
+    val mYear: Int
+    val mMonth: Int
+    val mDay: Int
+
+    // Initializing a Calendar
+    val mCalendar = Calendar.getInstance()
+
+    // Fetching current year, month and day
+    mYear = mCalendar.get(Calendar.YEAR)
+    mMonth = mCalendar.get(Calendar.MONTH)
+    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
+
+    mCalendar.time = Date()
+    val mDatePickerDialog = DatePickerDialog(
+        mContext,
+        { _: DatePicker, pickedYear: Int, pickedMonth: Int, pickedDay: Int ->
+            callback.invoke(pickedDay, pickedMonth, pickedYear)
+        }, mYear, mMonth, mDay
+    )
+    return mDatePickerDialog
+}
+
 @Composable
 fun NoteRow(item: Item) {
     Row(
@@ -156,23 +196,31 @@ fun NoteRow(item: Item) {
             )
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically){
-                    ElephantCheckbox()
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .padding(end = 16.dp)
+                ){
+                    ElephantCheckbox(item.isComplete?: false)
                     Text(
                         text = item.note.toString(),
                         fontSize = 20.sp,
                         color = Purple650,
                         modifier = Modifier
-                            .padding(start = 16.dp)
+                            .padding(start = 16.dp),
+                        fontFamily = FontFamily.Serif
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "Time",
+                    text = item.time.toString(),
                     fontSize = 16.sp,
-                    color = Purple650
+                    color = Purple650,
+                    fontFamily = FontFamily.Serif
                 )
             }
             Divider(
@@ -185,8 +233,8 @@ fun NoteRow(item: Item) {
 }
 
 @Composable
-fun ElephantCheckbox() {
-    val checkedState = remember { mutableStateOf(true) }
+fun ElephantCheckbox(isComplete: Boolean) {
+    val checkedState = remember { mutableStateOf(isComplete) }
     Checkbox(
         checked = checkedState.value,
         onCheckedChange = { checkedState.value = it },
@@ -215,7 +263,8 @@ fun ElephantBottomBar(
                     text = taskCount,
                     fontSize = 24.sp,
                     color = Purple800,
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(start = 16.dp),
+                    fontFamily = FontFamily.Serif
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 AddNew { addNew.invoke() }
@@ -283,14 +332,18 @@ fun ElephantAppBar(
             ) {
                 Text(
                     text = dayNameText,
-                    fontWeight = FontWeight.Bold,
                     color = Purple650,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(end = 4.dp)
                 )
                 Text(
                     text = dateText,
                     color = Purple650,
-                    fontSize = 14.sp
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Light
                 )
             }
         }
@@ -336,7 +389,8 @@ fun AddNew(onClicked: () -> Unit) {
             Text(
                 text = "Add New",
                 fontSize = 24.sp,
-                color = Purple800
+                color = Purple800,
+                fontFamily = FontFamily.Serif
             )
         }
     }
