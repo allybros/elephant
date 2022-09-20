@@ -125,7 +125,7 @@ fun TimeSetText(callback: (String) -> Unit) {
 
     val mContext = LocalContext.current
 
-    val mTime = remember { mutableStateOf("No time set") }
+    val mTime = remember { mutableStateOf("__ : __") }
 
     val mTimePickerDialog = TimePickerDialog(
         mContext,
