@@ -24,17 +24,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.allybros.elephant_todo_app.addZeroStart
 import com.allybros.elephant_todo_app.db.Item
-import com.allybros.elephant_todo_app.ui.screen.addDialog.AddDialog
+import com.allybros.elephant_todo_app.ui.dialogs.AddDialog
 import com.allybros.elephant_todo_app.ui.theme.*
+import com.allybros.elephant_todo_app.util.*
 import dagger.hilt.android.AndroidEntryPoint
-import java.text.DateFormatSymbols
 import java.util.*
 
 @AndroidEntryPoint
@@ -60,27 +58,23 @@ fun MainScreen(
     mCalendar: Calendar
 ) {
     val showDialog = remember { mutableStateOf(false) }
-    val mDayName = remember {
-        val dayNames: Array<String> = DateFormatSymbols().weekdays
-        mutableStateOf(dayNames[mCalendar.get(Calendar.DAY_OF_WEEK)].plus( ","))
-    }
-    val mDayAndMonth = remember {
-        val monthNames: Array<String> = DateFormatSymbols().months
-        mutableStateOf(
-            mCalendar
-                .get(Calendar.DAY_OF_MONTH)
-                .toString()
-                .plus(" ".plus(monthNames[mCalendar.get(Calendar.MONTH) + 1])))
+
+    val dayNameLabel = remember {
+        mutableStateOf(mCalendar.getDayName().plus( ","))
     }
 
-    val mDate = remember {
-        val month = mCalendar.get(Calendar.MONTH)
-        val day = mCalendar.get(Calendar.DAY_OF_MONTH)
-        val year = mCalendar.get(Calendar.YEAR)
-        mutableStateOf("$day/${month+1}/$year")
+    val dayAndMonthLabel = remember {
+        mutableStateOf(mCalendar.getDay().toString().plus(" ".plus(mCalendar.getMonthName())))
     }
 
-    val noteList by viewModel.noteListLiveData.collectAsState()
+    val formattedDate = remember {
+        val month = mCalendar.getMonth() + 1
+        val day = mCalendar.getDay()
+        val year = mCalendar.getYear()
+        mutableStateOf("$day/${month}/$year")
+    }
+
+    val noteList by viewModel.noteListStateFlow.collectAsState()
 
     val datePickerDialog = elephantDatePickerDialog(
         LocalContext.current,
@@ -89,55 +83,53 @@ fun MainScreen(
                 pickedDay,
                 pickedMonth,
                 pickedYear,
-                mDate,
-                mDayName,
-                mDayAndMonth,
-                viewModel
+                formattedDate,
+                dayNameLabel,
+                dayAndMonthLabel,
+                viewModel,
+                mCalendar
             )
         }
     )
-    viewModel.getNotes(mDate.value)
 
+    viewModel.getNotes(formattedDate.value)
 
-
-    if(showDialog.value)
+    if(showDialog.value){
         AddDialog(
             setShowDialog = { showDialog.value = it },
-            date = mDate.value,
+            date = formattedDate.value,
             buttonClicked = {
                 viewModel.addItem(it)
-                viewModel.getNotes(mDayAndMonth.value)
+                viewModel.getNotes(dayAndMonthLabel.value)
             }
         )
+    }
 
     Scaffold(
         topBar = {
             ElephantAppBar(
             onBackClicked = {
-                mCalendar.add(Calendar.DATE, -1)
-                onDatePicked(
-                    getPickedDay(mCalendar),
-                    getPickedMonth(mCalendar),
-                    getPickedYear(mCalendar),
-                    mDate,
-                    mDayName,
-                    mDayAndMonth,
+                onBackClicked(
+                    mCalendar,
+                    formattedDate,
+                    dayNameLabel,
+                    dayAndMonthLabel,
                     viewModel
-                ) },
+                )
+            },
             onForwardClicked = {
-                mCalendar.add(Calendar.DATE, 1)
-                onDatePicked(
-                    getPickedDay(mCalendar),
-                    getPickedMonth(mCalendar),
-                    getPickedYear(mCalendar),
-                    mDate,
-                    mDayName,
-                    mDayAndMonth,
-                    viewModel) },
+                onForwardClicked(
+                    mCalendar,
+                    formattedDate,
+                    dayNameLabel,
+                    dayAndMonthLabel,
+                    viewModel
+                )
+           },
             dateClicked = { datePickerDialog.show() },
-            mDayName.value,
-            mDayAndMonth.value
-        ) },
+            dayNameLabel.value,
+            dayAndMonthLabel.value
+        )},
         bottomBar = {
             ElephantBottomBar(
                 addNew = { showDialog.value = true },
@@ -156,32 +148,64 @@ fun MainScreen(
     }
 }
 
-fun getPickedYear(mCalendar: Calendar): Int = mCalendar.get(Calendar.YEAR)
+fun onBackClicked(
+    mCalendar: Calendar,
+    mDate: MutableState<String>,
+    mDayName: MutableState<String>,
+    mDayAndMonth: MutableState<String>,
+    viewModel: MainViewModel
+) {
+    mCalendar.add(Calendar.DAY_OF_MONTH, -1)
+    onDatePicked(
+        mCalendar.getDay(),
+        mCalendar.getMonth(),
+        mCalendar.getYear(),
+        mDate,
+        mDayName,
+        mDayAndMonth,
+        viewModel,
+        mCalendar
+    )
+}
 
-fun getPickedMonth(mCalendar: Calendar): Int = mCalendar.get(Calendar.MONTH) + 1
-
-fun getPickedDay(mCalendar: Calendar): Int = mCalendar.get(Calendar.DAY_OF_MONTH)
+fun onForwardClicked(
+    mCalendar: Calendar,
+    mDate: MutableState<String>,
+    mDayName: MutableState<String>,
+    mDayAndMonth: MutableState<String>,
+    viewModel: MainViewModel
+) {
+    mCalendar.add(Calendar.DAY_OF_MONTH, 1)
+    onDatePicked(
+        mCalendar.getDay(),
+        mCalendar.getMonth(),
+        mCalendar.getYear(),
+        mDate,
+        mDayName,
+        mDayAndMonth,
+        viewModel,
+        mCalendar
+    )
+}
 
 fun onDatePicked(
     pickedDay: Int,
     pickedMonth: Int,
     pickedYear: Int,
-    mDate: MutableState<String>,
+    formattedDate: MutableState<String>,
     dayName: MutableState<String>,
     mDayAndMonth: MutableState<String>,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    mCalendar: Calendar
 ) {
-    mDate.value = "${pickedDay.toString().addZeroStart()}/${pickedMonth+1}/$pickedYear"
-    val calendar = Calendar.getInstance()
-    calendar.set(Calendar.DAY_OF_MONTH,pickedDay)
-    calendar.set(Calendar.MONTH,pickedMonth)
-    calendar.set(Calendar.YEAR,pickedYear)
+    formattedDate.value = "${pickedDay.toString().addZeroStart()}/${pickedMonth + 1}/$pickedYear"
+    mCalendar.set(Calendar.DAY_OF_MONTH,pickedDay)
+    mCalendar.set(Calendar.MONTH,pickedMonth)
+    mCalendar.set(Calendar.YEAR,pickedYear)
 
-    viewModel.getNotes(mDate.value)
-    val dayNames: Array<String> = DateFormatSymbols().weekdays
-    val monthNames: Array<String> = DateFormatSymbols().months
-    dayName.value = dayNames[calendar.get(Calendar.DAY_OF_WEEK)].plus( ",")
-    mDayAndMonth.value = pickedDay.toString().plus(" "+ monthNames[pickedMonth+1])
+    viewModel.getNotes(formattedDate.value)
+    dayName.value = mCalendar.getDayName().plus( ",")
+    mDayAndMonth.value = mCalendar.getDay().toString().plus(" "+ mCalendar.getMonthName())
 }
 
 fun elephantDatePickerDialog(
@@ -202,9 +226,9 @@ fun elephantDatePickerDialog(
     val mCalendar = Calendar.getInstance()
 
     // Fetching current year, month and day
-    mYear = mCalendar.get(Calendar.YEAR)
-    mMonth = mCalendar.get(Calendar.MONTH)
-    mDay = mCalendar.get(Calendar.DAY_OF_MONTH)
+    mYear = mCalendar.getYear()
+    mMonth = mCalendar.getMonth()
+    mDay = mCalendar.getDay()
 
     mCalendar.time = Date()
     val mDatePickerDialog = DatePickerDialog(

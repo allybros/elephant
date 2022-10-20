@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.allybros.elephant_todo_app.db.Item
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,7 +20,8 @@ import javax.inject.Inject
 class MainViewModel
     @Inject constructor(private val repository: MainRepository) : ViewModel(){
 
-    var noteListLiveData = MutableStateFlow<List<Item>>(listOf())
+    private var _noteListLiveData = MutableStateFlow<List<Item>>(listOf())
+    var noteListStateFlow = _noteListLiveData.asStateFlow()
 
     fun addItem(item: Item){
         viewModelScope.launch {
@@ -31,7 +34,7 @@ class MainViewModel
         repository.date = date
         viewModelScope.launch{
             repository.getNotes.collect {
-                noteListLiveData.value = it
+                _noteListLiveData.value = it
             }
         }
     }
