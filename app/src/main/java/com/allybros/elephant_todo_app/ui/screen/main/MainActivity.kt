@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +33,7 @@ import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.ui.dialogs.AddDialog
 import com.allybros.elephant_todo_app.ui.theme.*
 import com.allybros.elephant_todo_app.util.*
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
@@ -269,7 +271,7 @@ fun NoteRow(item: Item) {
                     Text(
                         text = item.note.toString(),
                         fontSize = 20.sp,
-                        color = Purple650,
+                        color = MaterialTheme.colors.primary,
                         modifier = Modifier
                             .padding(start = 16.dp),
                         fontFamily = FontFamily.Serif
@@ -278,7 +280,7 @@ fun NoteRow(item: Item) {
                 Text(
                     text = item.time.toString(),
                     fontSize = 16.sp,
-                    color = Purple650,
+                    color = MaterialTheme.colors.primary,
                     fontFamily = FontFamily.Serif
                 )
             }
@@ -298,8 +300,8 @@ fun ElephantCheckbox(isComplete: Boolean) {
         checked = checkedState.value,
         onCheckedChange = { checkedState.value = it },
         colors = CheckboxDefaults.colors(
-            Purple650,
-            Purple650
+            MaterialTheme.colors.primary,
+            MaterialTheme.colors.primary
         )
     )
 }
@@ -315,13 +317,13 @@ fun ElephantBottomBar(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Column(modifier = Modifier.background(Color.White)) {
+        Column(modifier = Modifier.background(MaterialTheme.colors.background)) {
             Divider(color = Purple100, thickness = 1.dp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = taskCount,
-                    fontSize = 24.sp,
-                    color = Purple800,
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colors.primary,
                     modifier = Modifier.padding(start = 16.dp),
                     fontFamily = FontFamily.Serif
                 )
@@ -342,7 +344,7 @@ fun ElephantAppBar(
     dateText: String
 ) {
     TopAppBar(
-        backgroundColor = Color.White
+        backgroundColor = MaterialTheme.colors.background
     ) {
         ConstraintLayout(
             modifier = Modifier
@@ -391,7 +393,7 @@ fun ElephantAppBar(
             ) {
                 Text(
                     text = dayNameText,
-                    color = Purple650,
+                    color = MaterialTheme.colors.primary,
                     fontSize = 18.sp,
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.Bold,
@@ -399,7 +401,7 @@ fun ElephantAppBar(
                 )
                 Text(
                     text = dateText,
-                    color = Purple650,
+                    color = MaterialTheme.colors.primary,
                     fontSize = 18.sp,
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.Light
@@ -426,29 +428,35 @@ fun DirectionButton(
             imageVector = imageVector,
             contentDescription = description,
             modifier = iconModifier,
-            tint = Purple700
+            tint = vectorColors()
         )
     }
 }
+
+@Composable
+fun vectorColors(): Color =
+    if (!isSystemInDarkTheme()){ Purple700 } else { Purple200 }
+
 
 @Composable
 fun AddNew(onClicked: () -> Unit) {
     Box{
         OutlinedButton(
             onClick = { onClicked.invoke() },
-            border = null
+            border = null,
+            modifier = Modifier.wrapContentSize(Alignment.Center)
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
                 contentDescription = "New",
                 modifier = Modifier
                     .size(36.dp),
-                tint = Purple800
+                tint = MaterialTheme.colors.primary
             )
             Text(
                 text = "Add New",
-                fontSize = 24.sp,
-                color = Purple800,
+                fontSize = 20.sp,
+                color = MaterialTheme.colors.primary,
                 fontFamily = FontFamily.Serif
             )
         }

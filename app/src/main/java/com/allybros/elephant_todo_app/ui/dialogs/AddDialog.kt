@@ -49,7 +49,7 @@ fun AddDialog (
     Dialog(onDismissRequest = { setShowDialog(false) }) {
         Surface(
             shape = RoundedCornerShape(16.dp),
-            color = Color.White
+            color = MaterialTheme.colors.background
         ) {
             Column(
                 verticalArrangement = Arrangement.Center
@@ -62,7 +62,7 @@ fun AddDialog (
                     Text(
                         text = "Enter New Note",
                         style = TextStyle.Default.copy(
-                            color = Purple500,
+                            color = MaterialTheme.colors.primary,
                             fontWeight = FontWeight.Bold,
                         ),fontSize = 24.sp
                     )
@@ -138,7 +138,7 @@ fun TimeSetText(callback: (String) -> Unit) {
         text = mTime.value,
         Modifier
             .clickable { mTimePickerDialog.show() },
-        color = Color.Gray,
+        color = MaterialTheme.colors.primary,
         textAlign = TextAlign.End,
         fontSize = 28.sp,
     )
