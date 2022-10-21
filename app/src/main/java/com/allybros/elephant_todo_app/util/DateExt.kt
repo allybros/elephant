@@ -27,3 +27,14 @@ fun Calendar.getDayName(): String {
     return dayNames[this.get(Calendar.DAY_OF_WEEK)]
 }
 
+fun Calendar.nextDay() : Unit = this.add(Calendar.DAY_OF_MONTH, 1)
+
+fun Calendar.previousDay() : Unit = this.add(Calendar.DAY_OF_MONTH, -1)
+
+fun Calendar.getFormattedDate(): String {
+    val month = this.getMonth() + 1
+    val day = this.getDay()
+    val year = this.getYear()
+    return "$day/${month}/$year"
+}
+
