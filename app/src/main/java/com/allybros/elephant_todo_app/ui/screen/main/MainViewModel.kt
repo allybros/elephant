@@ -31,6 +31,11 @@ class MainViewModel
     private val _dayNameLabel = MutableStateFlow(mCalendar.getDayName().plus( ","))
     var dayNameLabelStateFlow = _dayNameLabel.asStateFlow()
 
+    private val _updatedItem = MutableStateFlow(Item())
+    var updatedItemStateFlow = _updatedItem.asStateFlow()
+
+
+
     private val _dayAndMonthLabel = MutableStateFlow(
         mCalendar
             .getDay()
@@ -47,16 +52,31 @@ class MainViewModel
 
     fun addItem(item: Item){
         viewModelScope.launch {
-            Log.d("TAG", item.toString())
+            Log.d("ADDED", item.toString())
             repository.addItem(item)
+        }
+    }
+
+    fun deleteItem(item: Item){
+        viewModelScope.launch {
+            Log.d("DELETED", item.toString())
+            repository.deleteItem(item)
+        }
+    }
+
+    fun updateItem(item: Item){
+        viewModelScope.launch {
+            Log.d("UPDATED", item.toString())
+            repository.updateItem(item)
         }
     }
 
     fun getNotes(date: String){
         repository.date = date
         viewModelScope.launch{
-            repository.getNotes.collect {
-                _noteListLiveData.value = it
+            repository.getNotes.collect { item ->
+                _noteListLiveData.value = item
+                item.forEach { Log.d("ITEMS: ", it.note.toString()) }
             }
         }
     }
@@ -86,7 +106,13 @@ class MainViewModel
         )
     }
 
-    fun showAddDialog(it: Boolean){
+    fun setUpdatedItem(item: Item){
+        _updatedItem.value = item
+    }
+
+    fun showAddDialog(
+        it: Boolean
+    ){
         _dialogState.value = it
     }
 

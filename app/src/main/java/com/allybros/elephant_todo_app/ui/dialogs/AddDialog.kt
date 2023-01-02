@@ -1,13 +1,13 @@
 package com.allybros.elephant_todo_app.ui.dialogs
 
 import android.app.TimePickerDialog
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.allybros.elephant_todo_app.util.addZeroStart
 import com.allybros.elephant_todo_app.db.Item
-import com.allybros.elephant_todo_app.ui.theme.Purple500
 
 
 /**
@@ -30,16 +29,24 @@ import com.allybros.elephant_todo_app.ui.theme.Purple500
 fun AddDialog (
     setShowDialog: (Boolean) -> Unit,
     date: String,
-    buttonClicked: (item: Item)->Unit
+    buttonClicked: (item: Item)->Unit,
+    updateItem:Item? = null
 ) {
     val padding = 16.dp
 
     var note: String by remember {
-        mutableStateOf("")
+        var note = ""
+        if(updateItem?.note?.isNotBlank() == true) note = updateItem.note!!
+        mutableStateOf(note)
     }
 
     var time: String by remember {
-        mutableStateOf("")
+        var time = ""
+        if(updateItem?.time?.isNotBlank() == true) {
+            time = updateItem.time!!
+        }
+
+        mutableStateOf(time)
     }
 
     val item: Item by remember {
@@ -73,9 +80,12 @@ fun AddDialog (
                         .absolutePadding(top = padding, left = padding, right = padding)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center) {
-                    InsertArea { text ->
-                        note = text
-                    }
+                    InsertArea (
+                        { text ->
+                            note = text
+                        },
+                        updateItem?.note
+                    )
                 }
                 Row(
                     modifier = Modifier
@@ -83,9 +93,12 @@ fun AddDialog (
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    TimeSetText { text ->
-                        time = text
-                    }
+                    TimeSetText(
+                        { text ->
+                            time = text
+                        },
+                        updateItem?.time
+                    )
                 }
                 Row(
                     modifier = Modifier
@@ -93,6 +106,7 @@ fun AddDialog (
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
+                    item.uid = updateItem?.uid
                     item.note = note
                     item.date = date
                     item.time = time
@@ -105,7 +119,12 @@ fun AddDialog (
                         },
                         shape = RoundedCornerShape(50.dp),
                         modifier = Modifier
-                            .absolutePadding(top = padding, left = padding, right = padding, bottom = padding)
+                            .absolutePadding(
+                                top = padding,
+                                left = padding,
+                                right = padding,
+                                bottom = padding
+                            )
                             .fillMaxWidth()
                             .height(50.dp)
                     ) {
@@ -119,11 +138,15 @@ fun AddDialog (
 }
 
 @Composable
-fun TimeSetText(callback: (String) -> Unit) {
+fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
 
     val mContext = LocalContext.current
 
-    val mTime = remember { mutableStateOf("__ : __") }
+    val mTime = remember {
+        var time = "__ : __"
+        if (initialTime?.isNotBlank() == true) time = initialTime!!
+        mutableStateOf(time)
+    }
 
     val mTimePickerDialog = TimePickerDialog(
         mContext,
@@ -149,8 +172,12 @@ private fun getTime(mHour: Int, mMinute: Int): String {
 }
 
 @Composable
-fun InsertArea(callback: (String) -> Unit) {
-    var text by remember { mutableStateOf(TextFieldValue("")) }
+fun InsertArea(
+    callback: (String) -> Unit,
+    autoFillNote: String? = ""
+) {
+    var text by remember { mutableStateOf(TextFieldValue(getInitialText(autoFillNote))) }
+
     OutlinedTextField(
         value = text,
         onValueChange = { newText ->
@@ -161,4 +188,8 @@ fun InsertArea(callback: (String) -> Unit) {
         singleLine = true,
         modifier = Modifier.fillMaxWidth()
     )
+}
+
+fun getInitialText(autoFillNote: String?): String {
+    return if (autoFillNote.isNullOrBlank()) "" else autoFillNote
 }

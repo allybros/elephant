@@ -20,6 +20,14 @@ class MainRepository @Inject constructor(private val itemDao: ItemDao) {
         itemDao.insertItem(item)
     }
 
+    suspend fun deleteItem(item: Item){
+        itemDao.deleteItem(item)
+    }
+
+    suspend fun updateItem(item: Item){
+        itemDao.updateItem(item)
+    }
+
     val getNotes = flow {
         val list = itemDao.getNotesByDates(date)
         emit(list)

@@ -35,6 +35,6 @@ fun Calendar.getFormattedDate(): String {
     val month = this.getMonth() + 1
     val day = this.getDay()
     val year = this.getYear()
-    return "$day/${month}/$year"
+    return "${if (day<10) "0$day" else day}/$month/$year"
 }
 

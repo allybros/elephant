@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.ui.dialogs.AddDialog
 import com.allybros.elephant_todo_app.ui.theme.*
@@ -56,7 +55,6 @@ class MainActivity : ComponentActivity() {
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel()
 ) {
-
     val noteList by viewModel.noteListStateFlow.collectAsState()
     val dialogStateStateFlow by viewModel.dialogStateStateFlow.collectAsState()
     val dayNameLabelStateFlow by viewModel.dayNameLabelStateFlow.collectAsState()
@@ -83,9 +81,14 @@ fun MainScreen(
             setShowDialog = { viewModel.showAddDialog(it) },
             date = formattedDateStateFlow,
             buttonClicked = {
-                viewModel.addItem(it)
-                viewModel.getNotes(dayAndMonthLabelStateFlow)
-            }
+                if (it.uid != null){
+                    viewModel.updateItem(it)
+                } else {
+                    viewModel.addItem(it)
+                    viewModel.getNotes(dayAndMonthLabelStateFlow)
+                }
+            },
+            updateItem = viewModel.updatedItemStateFlow.value
         )
     }
 
@@ -104,7 +107,10 @@ fun MainScreen(
         )},
         bottomBar = {
             ElephantBottomBar(
-                addNew = { viewModel.showAddDialog(true) },
+                addNew = {
+                    viewModel.setUpdatedItem(Item())
+                    viewModel.showAddDialog(true)
+                         },
                 taskCount = "${noteList.size} tasks"
             )
         }
@@ -114,7 +120,17 @@ fun MainScreen(
                 .padding(top = 8.dp, bottom = 40.dp)
         ){
             items(noteList){
-                NoteRow(it)
+                NoteRow(
+                    it,
+                    {
+                        viewModel.deleteItem(it)
+                        viewModel.getNotes(formattedDateStateFlow)
+                    },
+                    {
+                        viewModel.setUpdatedItem(it)
+                        viewModel.showAddDialog(true)
+                    }
+                )
             }
         }
     }
@@ -165,7 +181,11 @@ fun elephantDatePickerDialog(
 }
 
 @Composable
-fun NoteRow(item: Item) {
+fun NoteRow(
+    item: Item,
+    onCheckedChangedListener:()->Unit,
+    onRowClicked: ()->Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -181,7 +201,7 @@ fun NoteRow(item: Item) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().clickable { onRowClicked.invoke() }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -189,7 +209,8 @@ fun NoteRow(item: Item) {
                         .weight(1f, fill = false)
                         .padding(end = 16.dp)
                 ){
-                    ElephantCheckbox(item.isComplete?: false)
+                    ElephantCheckbox(
+                        item.isComplete?: false, onCheckedChangedListener)
                     Text(
                         text = item.note.toString(),
                         fontSize = 20.sp,
@@ -216,11 +237,18 @@ fun NoteRow(item: Item) {
 }
 
 @Composable
-fun ElephantCheckbox(isComplete: Boolean) {
+fun ElephantCheckbox(
+    isComplete: Boolean,
+    onCheckedChangedListener:()->Unit
+) {
     val checkedState = remember { mutableStateOf(isComplete) }
     Checkbox(
         checked = checkedState.value,
-        onCheckedChange = { checkedState.value = it },
+        onCheckedChange =
+        {
+            checkedState.value = it
+            onCheckedChangedListener.invoke()
+        },
         colors = CheckboxDefaults.colors(
             MaterialTheme.colors.primary,
             MaterialTheme.colors.primary

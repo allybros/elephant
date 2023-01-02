@@ -11,7 +11,7 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class Item(
-    @PrimaryKey(autoGenerate = true) val uid: Int? = null,
+    @PrimaryKey(autoGenerate = true) var uid: Int? = null,
     @ColumnInfo(name = "note") var note: String? = "",
     @ColumnInfo(name = "date") var date: String? = "",
     @ColumnInfo(name = "time") var time: String? = "",
