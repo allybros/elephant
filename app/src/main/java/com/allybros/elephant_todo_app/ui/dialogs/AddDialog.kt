@@ -1,12 +1,14 @@
 package com.allybros.elephant_todo_app.ui.dialogs
 
 import android.app.TimePickerDialog
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -91,7 +93,8 @@ fun AddDialog (
                     modifier = Modifier
                         .absolutePadding(top = padding)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     TimeSetText(
                         { text ->
@@ -156,7 +159,6 @@ fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
             callback.invoke(time)
         }, 12, 0, true
     )
-
     Text(
         text = mTime.value,
         Modifier
@@ -165,6 +167,22 @@ fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
         textAlign = TextAlign.End,
         fontSize = 28.sp,
     )
+    OutlinedButton(
+        onClick = {
+            callback.invoke("")
+            mTime.value = "__ : __"
+        },
+        border = null,
+        modifier = Modifier.wrapContentSize(Alignment.Center)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = "Remove",
+            modifier = Modifier
+                .size(36.dp),
+            tint = MaterialTheme.colors.primary
+        )
+    }
 }
 
 private fun getTime(mHour: Int, mMinute: Int): String {

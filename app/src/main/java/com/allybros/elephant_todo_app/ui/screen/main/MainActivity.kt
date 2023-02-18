@@ -6,6 +6,11 @@ import android.os.Bundle
 import android.widget.DatePicker
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -51,16 +56,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val noteList by viewModel.noteListStateFlow.collectAsState()
+    val deletedList = remember { mutableStateListOf<Item>() }
     val dialogStateStateFlow by viewModel.dialogStateStateFlow.collectAsState()
     val dayNameLabelStateFlow by viewModel.dayNameLabelStateFlow.collectAsState()
     val dayAndMonthLabelStateFlow by viewModel.dayAndMonthLabelStateFlow.collectAsState()
     val formattedDateStateFlow by viewModel.formattedDateStateFlow.collectAsState()
-
 
 
     val datePickerDialog = elephantDatePickerDialog(
@@ -75,6 +81,7 @@ fun MainScreen(
     )
 
     viewModel.getNotes(formattedDateStateFlow)
+    deletedList.clear()
 
     if(dialogStateStateFlow){
         AddDialog(
@@ -97,13 +104,18 @@ fun MainScreen(
             ElephantAppBar(
             onBackClicked = {
                 onBackClicked(viewModel)
+                deletedList.clear()
             },
             onForwardClicked = {
                 onForwardClicked(viewModel)
+                deletedList.clear()
            },
-            dateClicked = { datePickerDialog.show() },
-                dayNameLabelStateFlow,
-                dayAndMonthLabelStateFlow
+            dateClicked = {
+                datePickerDialog.show()
+                deletedList.clear()
+            },
+            dayNameLabelStateFlow,
+            dayAndMonthLabelStateFlow
         )},
         bottomBar = {
             ElephantBottomBar(
@@ -111,27 +123,34 @@ fun MainScreen(
                     viewModel.setUpdatedItem(Item())
                     viewModel.showAddDialog(true)
                          },
-                taskCount = "${noteList.size} tasks"
+                taskCount = "${noteList.size - deletedList.size} tasks"
             )
         }
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .padding(top = 8.dp, bottom = 40.dp)
-        ){
-            items(noteList){
-                NoteRow(
-                    it,
-                    {
-                        viewModel.deleteItem(it)
-                        viewModel.getNotes(formattedDateStateFlow)
-                    },
-                    {
-                        viewModel.setUpdatedItem(it)
-                        viewModel.showAddDialog(true)
+        LazyColumn(modifier = Modifier.padding(top = 8.dp, bottom = 40.dp)) {
+            itemsIndexed(
+                items = noteList,
+                itemContent = { _ , item ->
+                    AnimatedVisibility(
+                        visible = !deletedList.contains(item),
+                        enter = expandVertically(),
+                        exit = shrinkVertically(animationSpec = tween(durationMillis = 1000))
+                    ) {
+                        NoteRow(
+                            item,
+                            {
+                                deletedList.add(item)
+                                viewModel.deleteItem(item)
+                            },
+                            {
+                                viewModel.setUpdatedItem(item)
+                                viewModel.showAddDialog(true)
+                            }
+                        )
                     }
-                )
-            }
+
+                }
+            )
         }
     }
 }
@@ -201,7 +220,9 @@ fun NoteRow(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth().clickable { onRowClicked.invoke() }
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onRowClicked.invoke() }
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -209,8 +230,7 @@ fun NoteRow(
                         .weight(1f, fill = false)
                         .padding(end = 16.dp)
                 ){
-                    ElephantCheckbox(
-                        item.isComplete?: false, onCheckedChangedListener)
+                    ElephantCheckbox(onCheckedChangedListener)
                     Text(
                         text = item.note.toString(),
                         fontSize = 20.sp,
@@ -238,15 +258,12 @@ fun NoteRow(
 
 @Composable
 fun ElephantCheckbox(
-    isComplete: Boolean,
     onCheckedChangedListener:()->Unit
 ) {
-    val checkedState = remember { mutableStateOf(isComplete) }
     Checkbox(
-        checked = checkedState.value,
+        checked = false,
         onCheckedChange =
         {
-            checkedState.value = it
             onCheckedChangedListener.invoke()
         },
         colors = CheckboxDefaults.colors(
