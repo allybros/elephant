@@ -127,7 +127,7 @@ fun MainScreen(
             )
         }
     ) {
-        LazyColumn(modifier = Modifier.padding(top = 8.dp, bottom = 40.dp)) {
+        LazyColumn(modifier = Modifier.padding(bottom = 40.dp)) {
             itemsIndexed(
                 items = noteList,
                 itemContent = { _ , item ->
@@ -209,20 +209,16 @@ fun NoteRow(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onRowClicked.invoke() }
     ) {
-        Column(
-            modifier = Modifier
-            .padding(
-                horizontal = 16.dp,
-                vertical = 8.dp
-            )
-        ) {
+        Column {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onRowClicked.invoke() }
+                    .padding(vertical = 16.dp, horizontal = 8.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -248,7 +244,6 @@ fun NoteRow(
                 )
             }
             Divider(
-                modifier = Modifier.padding(top = 16.dp),
                 color = Purple100,
                 thickness = 1.dp
             )
