@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Elephant_todo_app</string>
+    <string name="newTask">Ekle</string>
+    <string name="enterNewTask">Yeni Görev</string>
+    <string name="tasks">" görev"</string>
+    <string name="save">Kaydet</string>
+    <string name="newTaskHint">Yeni ne var :)</string>
+    <string name="clearTimer">Bildirimi Kaldır</string>
+</resources>

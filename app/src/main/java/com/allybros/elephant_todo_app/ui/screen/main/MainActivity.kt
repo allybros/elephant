@@ -27,12 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.allybros.elephant_todo_app.R
 import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.ui.dialogs.AddDialog
 import com.allybros.elephant_todo_app.ui.theme.*
@@ -123,7 +125,7 @@ fun MainScreen(
                     viewModel.setUpdatedItem(Item())
                     viewModel.showAddDialog(true)
                          },
-                taskCount = "${noteList.size - deletedList.size} tasks"
+                taskCount = "${noteList.size - deletedList.size}"+ stringResource(R.string.tasks)
             )
         }
     ) {
@@ -416,7 +418,7 @@ fun AddNew(onClicked: () -> Unit) {
                 tint = MaterialTheme.colors.primary
             )
             Text(
-                text = "Add New",
+                text = stringResource(R.string.newTask),
                 fontSize = 20.sp,
                 color = MaterialTheme.colors.primary,
                 fontFamily = FontFamily.Serif

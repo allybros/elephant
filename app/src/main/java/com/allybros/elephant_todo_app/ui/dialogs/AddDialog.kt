@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.allybros.elephant_todo_app.R
 import com.allybros.elephant_todo_app.util.addZeroStart
 import com.allybros.elephant_todo_app.db.Item
 
@@ -69,7 +71,7 @@ fun AddDialog (
                         .fillMaxWidth()
                 ){
                     Text(
-                        text = "Enter New Note",
+                        text = stringResource(R.string.enterNewTask),
                         style = TextStyle.Default.copy(
                             color = MaterialTheme.colors.primary,
                             fontWeight = FontWeight.Bold,
@@ -131,7 +133,7 @@ fun AddDialog (
                             .fillMaxWidth()
                             .height(50.dp)
                     ) {
-                        Text(text = "Done")
+                        Text(text = stringResource(R.string.save))
                     }
                 }
             }
@@ -189,7 +191,7 @@ fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
 //                        .size(36.dp),
 //                    tint = MaterialTheme.colors.primary
 //                )
-                Text(text = "Clear Timer")
+                Text(text = stringResource(R.string.clearTimer))
             }
         }
     }
@@ -213,7 +215,7 @@ fun InsertArea(
             text = newText
             callback.invoke(newText.text)
         },
-        label = { Text(text = "What's next :)") },
+        label = { Text(text = stringResource(R.string.newTaskHint)) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth()
     )
