@@ -115,6 +115,7 @@ fun AddDialog (
                     item.note = note
                     item.date = date
                     item.time = time
+                    item.hasTime = time.isNotBlank()
                     if(time.isNotBlank()) item.hasTime = true
 
                     Button(

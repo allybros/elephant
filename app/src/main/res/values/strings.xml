@@ -2,8 +2,9 @@
     <string name="app_name">Elephant_todo_app</string>
     <string name="newTask">New Task</string>
     <string name="enterNewTask">New Task</string>
-    <string name="tasks">" tasks"</string>
+    <string name="tasks">" Tasks"</string>
     <string name="save">Done</string>
     <string name="newTaskHint">What\'s next :)</string>
     <string name="clearTimer">Clear Notifiacation</string>
+    <string name="done">" Done"</string>
 </resources>

@@ -22,8 +22,11 @@ class MainViewModel
     @Inject constructor(private val repository: MainRepository) : ViewModel(){
     private val mCalendar: Calendar = GregorianCalendar.getInstance()
 
-    private var _noteListLiveData = MutableStateFlow<List<Item>>(listOf())
-    var noteListStateFlow = _noteListLiveData.asStateFlow()
+    private var _taskListLiveData = MutableStateFlow<List<Item>>(listOf())
+    var taskListStateFlow = _taskListLiveData.asStateFlow()
+
+    private var _doneTaskListLiveData = MutableStateFlow<List<Item>>(listOf())
+    var doneTaskListStateFlow = _doneTaskListLiveData.asStateFlow()
 
     private var _dialogState = MutableStateFlow(false)
     var dialogStateStateFlow = _dialogState.asStateFlow()
@@ -60,7 +63,8 @@ class MainViewModel
     fun deleteItem(item: Item){
         viewModelScope.launch {
             Log.d("DELETED", item.toString())
-            repository.deleteItem(item)
+            repository.updateItem(item)
+            getNotes(_formattedDate.value)
         }
     }
 
@@ -75,8 +79,9 @@ class MainViewModel
         repository.date = date
         viewModelScope.launch{
             repository.getNotes.collect { item ->
-                _noteListLiveData.value = item
-                item.forEach { Log.d("ITEMS: ", it.note.toString()) }
+                _taskListLiveData.value = item
+                _doneTaskListLiveData.value = item.filter { it.isComplete == true }
+                item.forEach { Log.d("ITEMS: ", it.toString()) }
             }
         }
     }

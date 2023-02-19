@@ -6,11 +6,6 @@ import android.os.Bundle
 import android.widget.DatePicker
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -28,8 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -58,13 +55,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel()
 ) {
-    val noteList by viewModel.noteListStateFlow.collectAsState()
-    val deletedList = remember { mutableStateListOf<Item>() }
+    val taskList by viewModel.taskListStateFlow.collectAsState()
+    val doneTaskList by viewModel.doneTaskListStateFlow.collectAsState()
     val dialogStateStateFlow by viewModel.dialogStateStateFlow.collectAsState()
     val dayNameLabelStateFlow by viewModel.dayNameLabelStateFlow.collectAsState()
     val dayAndMonthLabelStateFlow by viewModel.dayAndMonthLabelStateFlow.collectAsState()
@@ -83,7 +79,6 @@ fun MainScreen(
     )
 
     viewModel.getNotes(formattedDateStateFlow)
-    deletedList.clear()
 
     if(dialogStateStateFlow){
         AddDialog(
@@ -106,15 +101,12 @@ fun MainScreen(
             ElephantAppBar(
             onBackClicked = {
                 onBackClicked(viewModel)
-                deletedList.clear()
             },
             onForwardClicked = {
                 onForwardClicked(viewModel)
-                deletedList.clear()
            },
             dateClicked = {
                 datePickerDialog.show()
-                deletedList.clear()
             },
             dayNameLabelStateFlow,
             dayAndMonthLabelStateFlow
@@ -125,34 +117,24 @@ fun MainScreen(
                     viewModel.setUpdatedItem(Item())
                     viewModel.showAddDialog(true)
                          },
-                taskCount = "${noteList.size - deletedList.size}"+ stringResource(R.string.tasks)
+                taskCount = "${taskList.size - doneTaskList.size}"+ stringResource(R.string.tasks) +
+                        " ${doneTaskList.size}" +  stringResource(R.string.done)
             )
         }
     ) {
         LazyColumn(modifier = Modifier.padding(bottom = 40.dp)) {
-            itemsIndexed(
-                items = noteList,
-                itemContent = { _ , item ->
-                    AnimatedVisibility(
-                        visible = !deletedList.contains(item),
-                        enter = expandVertically(),
-                        exit = shrinkVertically(animationSpec = tween(durationMillis = 1000))
-                    ) {
-                        NoteRow(
-                            item,
-                            {
-                                deletedList.add(item)
-                                viewModel.deleteItem(item)
-                            },
-                            {
-                                viewModel.setUpdatedItem(item)
-                                viewModel.showAddDialog(true)
-                            }
-                        )
+            items(taskList){ item ->
+                NoteRow(
+                    item,
+                    {
+                        viewModel.deleteItem(item)
+                    },
+                    {
+                        viewModel.setUpdatedItem(item)
+                        viewModel.showAddDialog(true)
                     }
-
-                }
-            )
+                )
+            }
         }
     }
 }
@@ -222,27 +204,30 @@ fun NoteRow(
                     .clickable { onRowClicked.invoke() }
                     .padding(vertical = 16.dp, horizontal = 8.dp)
             ) {
+                val textDecoration = remember { mutableStateOf(setTextStyle(item.isComplete?: false)) }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .padding(end = 16.dp)
                 ){
-                    ElephantCheckbox(onCheckedChangedListener)
+                    ElephantCheckbox(onCheckedChangedListener, item, textDecoration)
                     Text(
                         text = item.note.toString(),
                         fontSize = 20.sp,
                         color = MaterialTheme.colors.primary,
                         modifier = Modifier
                             .padding(start = 16.dp),
-                        fontFamily = FontFamily.Serif
+                        fontFamily = FontFamily.Serif,
+                        style = TextStyle(textDecoration = textDecoration.value)
                     )
                 }
                 Text(
                     text = item.time.toString(),
                     fontSize = 16.sp,
                     color = MaterialTheme.colors.primary,
-                    fontFamily = FontFamily.Serif
+                    fontFamily = FontFamily.Serif,
+                    style = TextStyle(textDecoration = textDecoration.value)
                 )
             }
             Divider(
@@ -253,14 +238,24 @@ fun NoteRow(
     }
 }
 
+fun setTextStyle(isCompleted: Boolean): TextDecoration {
+    return if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
+}
+
 @Composable
 fun ElephantCheckbox(
-    onCheckedChangedListener:()->Unit
+    onCheckedChangedListener: () -> Unit,
+    item: Item,
+    textDecoration: MutableState<TextDecoration>
 ) {
+    val isChecked = remember { mutableStateOf((item.isComplete ?: false)) }
     Checkbox(
-        checked = false,
+        checked = isChecked.value,
         onCheckedChange =
         {
+            item.isComplete = it
+            isChecked.value = (item.isComplete?: false)
+            textDecoration.value = setTextStyle(item.isComplete?:false)
             onCheckedChangedListener.invoke()
         },
         colors = CheckboxDefaults.colors(
