@@ -159,30 +159,41 @@ fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
             callback.invoke(time)
         }, 12, 0, true
     )
-    Text(
-        text = mTime.value,
-        Modifier
-            .clickable { mTimePickerDialog.show() },
-        color = MaterialTheme.colors.primary,
-        textAlign = TextAlign.End,
-        fontSize = 28.sp,
-    )
-    OutlinedButton(
-        onClick = {
-            callback.invoke("")
-            mTime.value = "__ : __"
-        },
-        border = null,
-        modifier = Modifier.wrapContentSize(Alignment.Center)
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Filled.Close,
-            contentDescription = "Remove",
-            modifier = Modifier
-                .size(36.dp),
-            tint = MaterialTheme.colors.primary
-        )
+        Row {
+            Text(
+                text = mTime.value,
+                Modifier
+                    .clickable { mTimePickerDialog.show() },
+                color = MaterialTheme.colors.primary,
+                textAlign = TextAlign.End,
+                fontSize = 28.sp,
+            )
+        }
+        Row {
+            OutlinedButton(
+                onClick = {
+                    callback.invoke("")
+                    mTime.value = "__ : __"
+                },
+                border = null,
+                modifier = Modifier.wrapContentSize(Alignment.Center)
+            ) {
+//                Icon(
+//                    imageVector = Icons.Filled.Close,
+//                    contentDescription = "Remove",
+//                    modifier = Modifier
+//                        .size(36.dp),
+//                    tint = MaterialTheme.colors.primary
+//                )
+                Text(text = "Clear Timer")
+            }
+        }
     }
+
 }
 
 private fun getTime(mHour: Int, mMinute: Int): String {
