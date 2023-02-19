@@ -92,7 +92,7 @@ fun MainScreen(
             buttonClicked = {
                 if (it.uid != null){
                     viewModel.updateItem(it)
-                } else {
+                } else if(it.note?.isNotBlank() == true){
                     viewModel.addItem(it)
                     viewModel.getNotes(dayAndMonthLabelStateFlow)
                 }
