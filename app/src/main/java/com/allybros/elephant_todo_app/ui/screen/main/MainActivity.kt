@@ -129,17 +129,18 @@ fun MainScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
-                            viewModel.setUpdatedItem(item)
-                            viewModel.showAddDialog(true)
-                        }
                         .animateItemPlacement()
                 ) {
                     NoteRow(
-                        item
-                    ) {
-                        viewModel.deleteItem(item)
-                    }
+                        item = item,
+                        onCheckedChangedListener = {
+                            viewModel.deleteItem(item)
+                        },
+                        onTextClicked = {
+                            viewModel.setUpdatedItem(item)
+                            viewModel.showAddDialog(true)
+                        }
+                    )
                 }
 
             }
@@ -196,6 +197,7 @@ fun elephantDatePickerDialog(
 fun NoteRow(
     item: Item,
     onCheckedChangedListener: () -> Unit,
+    onTextClicked: () -> Unit
 ) {
     Column {
         Row(
@@ -203,7 +205,7 @@ fun NoteRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp, horizontal = 8.dp)
+                .fillMaxHeight()
         ) {
             val textDecoration =
                 remember { mutableStateOf(setTextStyle(item.isComplete ?: false)) }
@@ -211,28 +213,39 @@ fun NoteRow(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .padding(end = 16.dp)
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 ElephantCheckbox(onCheckedChangedListener, item, textDecoration)
-                Text(
-                    text = item.note.toString(),
-                    fontSize = 20.sp,
-                    color = MaterialTheme.colors.primary,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
-                        .padding(start = 16.dp),
-                    fontFamily = FontFamily.Serif,
-                    style = TextStyle(textDecoration = textDecoration.value)
-                )
+                        .fillMaxWidth()
+                        .clickable { onTextClicked.invoke() }
+                        .padding(end = 16.dp)
+
+                ) {
+                    Text(
+                        text = item.note.toString(),
+                        fontSize = 20.sp,
+                        color = MaterialTheme.colors.primary,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(vertical = 24.dp, horizontal = 12.dp)
+                            .weight(1f),
+                        fontFamily = FontFamily.Serif,
+                        style = TextStyle(textDecoration = textDecoration.value),
+                    )
+                    Text(
+                        text = item.time.toString(),
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colors.primary,
+                        fontFamily = FontFamily.Serif,
+                        style = TextStyle(textDecoration = textDecoration.value)
+                    )
+                }
             }
-            Text(
-                text = item.time.toString(),
-                fontSize = 16.sp,
-                color = MaterialTheme.colors.primary,
-                fontFamily = FontFamily.Serif,
-                style = TextStyle(textDecoration = textDecoration.value)
-            )
+
         }
         Divider(
             color = Purple100,
