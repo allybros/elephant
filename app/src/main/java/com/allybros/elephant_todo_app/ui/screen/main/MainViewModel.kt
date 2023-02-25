@@ -79,7 +79,7 @@ class MainViewModel
         repository.date = date
         viewModelScope.launch{
             repository.getNotes.collect { item ->
-                _taskListLiveData.value = item
+                _taskListLiveData.value = item.sortedBy { it.time }.sortedBy { it.isComplete }
                 _doneTaskListLiveData.value = item.filter { it.isComplete == true }
                 item.forEach { Log.d("ITEMS: ", it.toString()) }
             }

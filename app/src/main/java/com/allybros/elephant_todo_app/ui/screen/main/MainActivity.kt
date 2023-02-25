@@ -78,16 +78,14 @@ fun MainScreen(
         }
     )
 
-    viewModel.getNotes(formattedDateStateFlow)
-
-    if(dialogStateStateFlow){
+    if (dialogStateStateFlow) {
         AddDialog(
             setShowDialog = { viewModel.showAddDialog(it) },
             date = formattedDateStateFlow,
             buttonClicked = {
-                if (it.uid != null){
+                if (it.uid != null) {
                     viewModel.updateItem(it)
-                } else if(it.note?.isNotBlank() == true){
+                } else if (it.note?.isNotBlank() == true) {
                     viewModel.addItem(it)
                     viewModel.getNotes(dayAndMonthLabelStateFlow)
                 }
@@ -99,31 +97,32 @@ fun MainScreen(
     Scaffold(
         topBar = {
             ElephantAppBar(
-            onBackClicked = {
-                onBackClicked(viewModel)
-            },
-            onForwardClicked = {
-                onForwardClicked(viewModel)
-           },
-            dateClicked = {
-                datePickerDialog.show()
-            },
-            dayNameLabelStateFlow,
-            dayAndMonthLabelStateFlow
-        )},
+                onBackClicked = {
+                    onBackClicked(viewModel)
+                },
+                onForwardClicked = {
+                    onForwardClicked(viewModel)
+                },
+                dateClicked = {
+                    datePickerDialog.show()
+                },
+                dayNameLabelStateFlow,
+                dayAndMonthLabelStateFlow
+            )
+        },
         bottomBar = {
             ElephantBottomBar(
                 addNew = {
                     viewModel.setUpdatedItem(Item())
                     viewModel.showAddDialog(true)
-                         },
-                taskCount = "${taskList.size - doneTaskList.size}"+ stringResource(R.string.tasks) +
-                        " ${doneTaskList.size}" +  stringResource(R.string.done)
+                },
+                taskCount = "${taskList.size - doneTaskList.size}" + stringResource(R.string.tasks) +
+                        " ${doneTaskList.size}" + stringResource(R.string.done)
             )
         }
     ) {
         LazyColumn(modifier = Modifier.padding(bottom = 40.dp)) {
-            items(taskList){ item ->
+            items(taskList) { item ->
                 NoteRow(
                     item,
                     {
@@ -137,6 +136,7 @@ fun MainScreen(
             }
         }
     }
+    viewModel.getNotes(formattedDateStateFlow)
 }
 
 fun onBackClicked(
@@ -154,7 +154,7 @@ fun onForwardClicked(
 fun elephantDatePickerDialog(
     mContext: Context,
     callback: (
-        pickedDay :Int,
+        pickedDay: Int,
         pickedMonth: Int,
         pickedYear: Int
     ) -> Unit
@@ -186,8 +186,8 @@ fun elephantDatePickerDialog(
 @Composable
 fun NoteRow(
     item: Item,
-    onCheckedChangedListener:()->Unit,
-    onRowClicked: ()->Unit
+    onCheckedChangedListener: () -> Unit,
+    onRowClicked: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -204,13 +204,16 @@ fun NoteRow(
                     .clickable { onRowClicked.invoke() }
                     .padding(vertical = 16.dp, horizontal = 8.dp)
             ) {
-                val textDecoration = remember { mutableStateOf(setTextStyle(item.isComplete?: false)) }
+                val textDecoration =
+                    remember { mutableStateOf(setTextStyle(item.isComplete ?: false)) }
+                textDecoration.value = setTextStyle(item.isComplete ?: false)
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .weight(1f, fill = false)
                         .padding(end = 16.dp)
-                ){
+                ) {
                     ElephantCheckbox(onCheckedChangedListener, item, textDecoration)
                     Text(
                         text = item.note.toString(),
@@ -249,13 +252,14 @@ fun ElephantCheckbox(
     textDecoration: MutableState<TextDecoration>
 ) {
     val isChecked = remember { mutableStateOf((item.isComplete ?: false)) }
+    isChecked.value = item.isComplete ?: false
     Checkbox(
         checked = isChecked.value,
         onCheckedChange =
         {
             item.isComplete = it
-            isChecked.value = (item.isComplete?: false)
-            textDecoration.value = setTextStyle(item.isComplete?:false)
+            isChecked.value = (item.isComplete ?: false)
+            textDecoration.value = setTextStyle(item.isComplete ?: false)
             onCheckedChangedListener.invoke()
         },
         colors = CheckboxDefaults.colors(
@@ -268,7 +272,7 @@ fun ElephantCheckbox(
 
 @Composable
 fun ElephantBottomBar(
-    addNew: ()-> Unit,
+    addNew: () -> Unit,
     taskCount: String
 ) {
     Row(
@@ -296,9 +300,9 @@ fun ElephantBottomBar(
 
 @Composable
 fun ElephantAppBar(
-    onBackClicked: ()-> Unit,
-    onForwardClicked: ()-> Unit,
-    dateClicked: ()-> Unit,
+    onBackClicked: () -> Unit,
+    onForwardClicked: () -> Unit,
+    dateClicked: () -> Unit,
     dayNameText: String,
     dateText: String
 ) {
@@ -314,7 +318,7 @@ fun ElephantAppBar(
             DirectionButton(
                 onButtonClicked = { onBackClicked.invoke() },
                 modifier = Modifier
-                    .constrainAs(backArrow){
+                    .constrainAs(backArrow) {
                         start.linkTo(parent.start)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
@@ -327,7 +331,7 @@ fun ElephantAppBar(
             DirectionButton(
                 onButtonClicked = { onForwardClicked.invoke() },
                 modifier = Modifier
-                    .constrainAs(forwardArrow){
+                    .constrainAs(forwardArrow) {
                         end.linkTo(parent.end)
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
@@ -394,12 +398,16 @@ fun DirectionButton(
 
 @Composable
 fun vectorColors(): Color =
-    if (!isSystemInDarkTheme()){ Purple700 } else { Purple200 }
+    if (!isSystemInDarkTheme()) {
+        Purple700
+    } else {
+        Purple200
+    }
 
 
 @Composable
 fun AddNew(onClicked: () -> Unit) {
-    Box{
+    Box {
         OutlinedButton(
             onClick = { onClicked.invoke() },
             border = null,
