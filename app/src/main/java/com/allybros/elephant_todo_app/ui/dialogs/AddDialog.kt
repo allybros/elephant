@@ -203,28 +203,34 @@ fun InsertArea(
     autoFillNote: String? = ""
 ) {
     var text by remember { mutableStateOf(TextFieldValue(getInitialText(autoFillNote))) }
-
+    var isTextChanged by remember { mutableStateOf(false) }
     Column {
         OutlinedTextField(
             value = text,
             onValueChange = { newText ->
+                isTextChanged = true
                 text = newText
                 callback.invoke(newText.text)
             },
             label = { Text(text = stringResource(R.string.newTaskHint)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            isError = isInputEmpty(text)
+            isError = isErrorShow(isTextChanged, isInputEmpty(text))
         )
 
         Text(
             modifier = Modifier.padding(start = 16.dp),
-            text = if (isInputEmpty(text)) stringResource(R.string.errorEmptyError) else "",
+            text = if (isErrorShow(isTextChanged, isInputEmpty(text))) stringResource(R.string.errorEmptyError) else "",
             style = TextStyle.Default.copy(color = MaterialTheme.colors.error,),
             fontSize = 12.sp
         )
     }
 }
+
+fun isErrorShow(isTextChanged: Boolean, isInputEmpty: Boolean): Boolean {
+    return isTextChanged && isInputEmpty
+}
+
 
 fun isInputEmpty(text: TextFieldValue): Boolean {
     return text.text.isBlank()
