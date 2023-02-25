@@ -76,6 +76,7 @@ fun AddDialog(
                         ), fontSize = 24.sp
                     )
                 }
+                var isFirstClick by remember { mutableStateOf(false) }
 
                 Row(
                     modifier = Modifier
@@ -87,7 +88,8 @@ fun AddDialog(
                         { text ->
                             note = text
                         },
-                        updateItem?.note
+                        updateItem?.note,
+                        isFirstClick
                     )
                 }
                 Row(
@@ -117,9 +119,9 @@ fun AddDialog(
                     item.isComplete = updateItem?.isComplete
                     item.hasTime = time.isNotBlank()
                     if (time.isNotBlank()) item.hasTime = true
-
                     Button(
                         onClick = {
+                            isFirstClick = true
                             if (note.isNotBlank()){
                                 buttonClicked(item)
                                 setShowDialog(false)
@@ -201,10 +203,12 @@ private fun getTime(mHour: Int, mMinute: Int): String {
 @Composable
 fun InsertArea(
     callback: (String) -> Unit,
-    autoFillNote: String? = ""
+    autoFillNote: String? = "",
+    isFirstClick: Boolean
 ) {
     var text by remember { mutableStateOf(TextFieldValue(getInitialText(autoFillNote))) }
     var isTextChanged by remember { mutableStateOf(false) }
+
     Column {
         OutlinedTextField(
             value = text,
@@ -216,20 +220,20 @@ fun InsertArea(
             label = { Text(text = stringResource(R.string.newTaskHint)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            isError = isErrorShow(isTextChanged, isInputEmpty(text))
+            isError = isErrorShow(isFirstClick, isTextChanged, isInputEmpty(text))
         )
 
         Text(
             modifier = Modifier.padding(start = 16.dp),
-            text = if (isErrorShow(isTextChanged, isInputEmpty(text))) stringResource(R.string.errorEmptyError) else "",
+            text = if (isErrorShow(isFirstClick, isTextChanged, isInputEmpty(text))) stringResource(R.string.errorEmptyError) else "",
             style = TextStyle.Default.copy(color = MaterialTheme.colors.error,),
             fontSize = 12.sp
         )
     }
 }
 
-fun isErrorShow(isTextChanged: Boolean, isInputEmpty: Boolean): Boolean {
-    return isTextChanged && isInputEmpty
+fun isErrorShow(isFirstClick: Boolean, isTextChanged: Boolean, isInputEmpty: Boolean): Boolean {
+    return ((isFirstClick || isTextChanged) && isInputEmpty)
 }
 
 
