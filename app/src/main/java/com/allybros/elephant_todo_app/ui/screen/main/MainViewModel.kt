@@ -57,13 +57,23 @@ class MainViewModel
         }
     }
 
-    fun deleteItem(item: Item) {
+    fun completeItem(item: Item) {
         viewModelScope.launch {
-            Log.d("DELETED", item.toString())
+            Log.d("Completed", item.toString())
             repository.updateItem(item)
             getNotes(_formattedDate.value)
         }
     }
+
+
+    fun deleteItem(item: Item) {
+        viewModelScope.launch {
+            Log.d("DELETED", item.toString())
+            repository.deleteItem(item)
+            getNotes(_formattedDate.value)
+        }
+    }
+
 
     fun updateItem(item: Item) {
         viewModelScope.launch {
