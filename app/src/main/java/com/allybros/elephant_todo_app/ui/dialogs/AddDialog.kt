@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,7 +92,7 @@ fun AddDialog(
                 }
                 Row(
                     modifier = Modifier
-                        .absolutePadding(top = padding)
+                        .absolutePadding(top = 12.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -121,8 +119,10 @@ fun AddDialog(
 
                     Button(
                         onClick = {
-                            buttonClicked(item)
-                            setShowDialog(false)
+                            if (note.isNotBlank()){
+                                buttonClicked(item)
+                                setShowDialog(false)
+                            }
                         },
                         shape = RoundedCornerShape(50.dp),
                         modifier = Modifier
@@ -186,13 +186,6 @@ fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
                 border = null,
                 modifier = Modifier.wrapContentSize(Alignment.Center)
             ) {
-//                Icon(
-//                    imageVector = Icons.Filled.Close,
-//                    contentDescription = "Remove",
-//                    modifier = Modifier
-//                        .size(36.dp),
-//                    tint = MaterialTheme.colors.primary
-//                )
                 Text(text = stringResource(R.string.clearTimer))
             }
         }
@@ -211,16 +204,30 @@ fun InsertArea(
 ) {
     var text by remember { mutableStateOf(TextFieldValue(getInitialText(autoFillNote))) }
 
-    OutlinedTextField(
-        value = text,
-        onValueChange = { newText ->
-            text = newText
-            callback.invoke(newText.text)
-        },
-        label = { Text(text = stringResource(R.string.newTaskHint)) },
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth()
-    )
+    Column {
+        OutlinedTextField(
+            value = text,
+            onValueChange = { newText ->
+                text = newText
+                callback.invoke(newText.text)
+            },
+            label = { Text(text = stringResource(R.string.newTaskHint)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            isError = isInputEmpty(text)
+        )
+
+        Text(
+            modifier = Modifier.padding(start = 16.dp),
+            text = if (isInputEmpty(text)) stringResource(R.string.errorEmptyError) else "",
+            style = TextStyle.Default.copy(color = MaterialTheme.colors.error,),
+            fontSize = 12.sp
+        )
+    }
+}
+
+fun isInputEmpty(text: TextFieldValue): Boolean {
+    return text.text.isBlank()
 }
 
 fun getInitialText(autoFillNote: String?): String {

@@ -8,4 +8,5 @@
     <string name="newTaskHint">Yeni ne var :)</string>
     <string name="clearTimer">Bildirimi Kaldır</string>
     <string name="done">" Tamamlandı"</string>
+    <string name="errorEmptyError">Boş görev olamaz.</string>
 </resources>

@@ -8,4 +8,5 @@
     <string name="newTaskHint">What\'s next :)</string>
     <string name="clearTimer">Clear Notification</string>
     <string name="done">" Done"</string>
+    <string name="errorEmptyError">Task can not be empty.</string>
 </resources>
