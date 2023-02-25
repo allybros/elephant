@@ -30,23 +30,23 @@ import com.allybros.elephant_todo_app.db.Item
 
 
 @Composable
-fun AddDialog (
+fun AddDialog(
     setShowDialog: (Boolean) -> Unit,
     date: String,
-    buttonClicked: (item: Item)->Unit,
-    updateItem:Item? = null
+    buttonClicked: (item: Item) -> Unit,
+    updateItem: Item? = null
 ) {
     val padding = 16.dp
 
     var note: String by remember {
         var note = ""
-        if(updateItem?.note?.isNotBlank() == true) note = updateItem.note!!
+        if (updateItem?.note?.isNotBlank() == true) note = updateItem.note!!
         mutableStateOf(note)
     }
 
     var time: String by remember {
         var time = ""
-        if(updateItem?.time?.isNotBlank() == true) {
+        if (updateItem?.time?.isNotBlank() == true) {
             time = updateItem.time!!
         }
 
@@ -64,18 +64,18 @@ fun AddDialog (
         ) {
             Column(
                 verticalArrangement = Arrangement.Center
-            ){
-                Row (
+            ) {
+                Row(
                     modifier = Modifier
                         .absolutePadding(top = padding, left = padding, right = padding)
                         .fillMaxWidth()
-                ){
+                ) {
                     Text(
                         text = stringResource(R.string.enterNewTask),
                         style = TextStyle.Default.copy(
                             color = MaterialTheme.colors.primary,
                             fontWeight = FontWeight.Bold,
-                        ),fontSize = 24.sp
+                        ), fontSize = 24.sp
                     )
                 }
 
@@ -83,8 +83,9 @@ fun AddDialog (
                     modifier = Modifier
                         .absolutePadding(top = padding, left = padding, right = padding)
                         .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center) {
-                    InsertArea (
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    InsertArea(
                         { text ->
                             note = text
                         },
@@ -116,7 +117,7 @@ fun AddDialog (
                     item.date = date
                     item.time = time
                     item.hasTime = time.isNotBlank()
-                    if(time.isNotBlank()) item.hasTime = true
+                    if (time.isNotBlank()) item.hasTime = true
 
                     Button(
                         onClick = {
@@ -156,8 +157,8 @@ fun TimeSetText(callback: (String) -> Unit, initialTime: String? = "") {
 
     val mTimePickerDialog = TimePickerDialog(
         mContext,
-        {_, mHour : Int, mMinute: Int ->
-            val time = getTime(mHour,mMinute)
+        { _, mHour: Int, mMinute: Int ->
+            val time = getTime(mHour, mMinute)
             mTime.value = time
             callback.invoke(time)
         }, 12, 0, true

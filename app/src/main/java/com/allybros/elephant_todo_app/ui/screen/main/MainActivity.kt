@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.DatePicker
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -55,6 +56,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = hiltViewModel()
@@ -120,19 +122,26 @@ fun MainScreen(
                         " ${doneTaskList.size}" + stringResource(R.string.done)
             )
         }
-    ) {
-        LazyColumn(modifier = Modifier.padding(bottom = 40.dp)) {
-            items(taskList) { item ->
-                NoteRow(
-                    item,
-                    {
+    ) { paddingValues ->
+        LazyColumn(modifier = Modifier.padding(paddingValues)) {
+            items(taskList, key = { it.uid as Any }) { item ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.setUpdatedItem(item)
+                            viewModel.showAddDialog(true)
+                        }
+                        .animateItemPlacement()
+                ) {
+                    NoteRow(
+                        item
+                    ) {
                         viewModel.deleteItem(item)
-                    },
-                    {
-                        viewModel.setUpdatedItem(item)
-                        viewModel.showAddDialog(true)
                     }
-                )
+                }
+
             }
         }
     }
@@ -187,57 +196,48 @@ fun elephantDatePickerDialog(
 fun NoteRow(
     item: Item,
     onCheckedChangedListener: () -> Unit,
-    onRowClicked: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onRowClicked.invoke() }
-    ) {
-        Column {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp, horizontal = 8.dp)
+        ) {
+            val textDecoration =
+                remember { mutableStateOf(setTextStyle(item.isComplete ?: false)) }
+            textDecoration.value = setTextStyle(item.isComplete ?: false)
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onRowClicked.invoke() }
-                    .padding(vertical = 16.dp, horizontal = 8.dp)
+                    .weight(1f, fill = false)
+                    .padding(end = 16.dp)
             ) {
-                val textDecoration =
-                    remember { mutableStateOf(setTextStyle(item.isComplete ?: false)) }
-                textDecoration.value = setTextStyle(item.isComplete ?: false)
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .padding(end = 16.dp)
-                ) {
-                    ElephantCheckbox(onCheckedChangedListener, item, textDecoration)
-                    Text(
-                        text = item.note.toString(),
-                        fontSize = 20.sp,
-                        color = MaterialTheme.colors.primary,
-                        modifier = Modifier
-                            .padding(start = 16.dp),
-                        fontFamily = FontFamily.Serif,
-                        style = TextStyle(textDecoration = textDecoration.value)
-                    )
-                }
+                ElephantCheckbox(onCheckedChangedListener, item, textDecoration)
                 Text(
-                    text = item.time.toString(),
-                    fontSize = 16.sp,
+                    text = item.note.toString(),
+                    fontSize = 20.sp,
                     color = MaterialTheme.colors.primary,
+                    modifier = Modifier
+                        .padding(start = 16.dp),
                     fontFamily = FontFamily.Serif,
                     style = TextStyle(textDecoration = textDecoration.value)
                 )
             }
-            Divider(
-                color = Purple100,
-                thickness = 1.dp
+            Text(
+                text = item.time.toString(),
+                fontSize = 16.sp,
+                color = MaterialTheme.colors.primary,
+                fontFamily = FontFamily.Serif,
+                style = TextStyle(textDecoration = textDecoration.value)
             )
         }
+        Divider(
+            color = Purple100,
+            thickness = 1.dp
+        )
     }
 }
 

@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel
-    @Inject constructor(private val repository: MainRepository) : ViewModel(){
+@Inject constructor(private val repository: MainRepository) : ViewModel() {
     private val mCalendar: Calendar = GregorianCalendar.getInstance()
 
     private var _taskListLiveData = MutableStateFlow<List<Item>>(listOf())
@@ -31,12 +31,11 @@ class MainViewModel
     private var _dialogState = MutableStateFlow(false)
     var dialogStateStateFlow = _dialogState.asStateFlow()
 
-    private val _dayNameLabel = MutableStateFlow(mCalendar.getDayName().plus( ","))
+    private val _dayNameLabel = MutableStateFlow(mCalendar.getDayName().plus(","))
     var dayNameLabelStateFlow = _dayNameLabel.asStateFlow()
 
     private val _updatedItem = MutableStateFlow(Item())
     var updatedItemStateFlow = _updatedItem.asStateFlow()
-
 
 
     private val _dayAndMonthLabel = MutableStateFlow(
@@ -51,16 +50,14 @@ class MainViewModel
     val formattedDateStateFlow = _formattedDate.asStateFlow()
 
 
-
-
-    fun addItem(item: Item){
+    fun addItem(item: Item) {
         viewModelScope.launch {
             Log.d("ADDED", item.toString())
             repository.addItem(item)
         }
     }
 
-    fun deleteItem(item: Item){
+    fun deleteItem(item: Item) {
         viewModelScope.launch {
             Log.d("DELETED", item.toString())
             repository.updateItem(item)
@@ -68,16 +65,16 @@ class MainViewModel
         }
     }
 
-    fun updateItem(item: Item){
+    fun updateItem(item: Item) {
         viewModelScope.launch {
             Log.d("UPDATED", item.toString())
             repository.updateItem(item)
         }
     }
 
-    fun getNotes(date: String){
+    fun getNotes(date: String) {
         repository.date = date
-        viewModelScope.launch{
+        viewModelScope.launch {
             repository.getNotes.collect { item ->
                 _taskListLiveData.value = item.sortedBy { it.time }.sortedBy { it.isComplete }
                 _doneTaskListLiveData.value = item.filter { it.isComplete == true }
@@ -92,17 +89,18 @@ class MainViewModel
         pickedMonth: Int,
         pickedYear: Int
     ) {
-        _formattedDate.value = "${pickedDay.toString().addZeroStart()}/${pickedMonth + 1}/$pickedYear"
-        mCalendar.set(Calendar.DAY_OF_MONTH,pickedDay)
-        mCalendar.set(Calendar.MONTH,pickedMonth)
-        mCalendar.set(Calendar.YEAR,pickedYear)
+        _formattedDate.value =
+            "${pickedDay.toString().addZeroStart()}/${pickedMonth + 1}/$pickedYear"
+        mCalendar.set(Calendar.DAY_OF_MONTH, pickedDay)
+        mCalendar.set(Calendar.MONTH, pickedMonth)
+        mCalendar.set(Calendar.YEAR, pickedYear)
 
         getNotes(_formattedDate.value)
-        _dayNameLabel.value = mCalendar.getDayName().plus( ",")
-        _dayAndMonthLabel.value = mCalendar.getDay().toString().plus(" "+ mCalendar.getMonthName())
+        _dayNameLabel.value = mCalendar.getDayName().plus(",")
+        _dayAndMonthLabel.value = mCalendar.getDay().toString().plus(" " + mCalendar.getMonthName())
     }
 
-    fun onForwardButtonClicked(){
+    fun onForwardButtonClicked() {
         mCalendar.nextDay()
         onDatePicked(
             mCalendar.getDay(),
@@ -111,13 +109,13 @@ class MainViewModel
         )
     }
 
-    fun setUpdatedItem(item: Item){
+    fun setUpdatedItem(item: Item) {
         _updatedItem.value = item
     }
 
     fun showAddDialog(
         it: Boolean
-    ){
+    ) {
         _dialogState.value = it
     }
 
