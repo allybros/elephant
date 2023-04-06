@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Elephant_todo_app</string>
+    <string name="app_name">Elephant</string>
     <string name="newTask">New Task</string>
     <string name="enterNewTask">New Task</string>
     <string name="tasks">" Tasks"</string>
@@ -8,4 +8,7 @@
     <string name="clearTimer">Clear Notification</string>
     <string name="done">" Done"</string>
     <string name="errorEmptyError">Task can not be empty.</string>
+    <string name="emptyList">Task list is empty today.
+        Let\'s do something today.</string>
+
 </resources>

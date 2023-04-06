@@ -1,6 +1,5 @@
 package com.allybros.elephant_todo_app.ui.screen.main
 
-import android.util.Log
 import com.allybros.elephant_todo_app.db.Item
 import com.allybros.elephant_todo_app.db.ItemDao
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +18,6 @@ class MainRepository @Inject constructor(private val itemDao: ItemDao) {
     suspend fun addItem(item: Item){
         itemDao.insertItem(item)
     }
-
     suspend fun deleteItem(item: Item){
         itemDao.deleteItem(item)
     }
@@ -27,8 +25,16 @@ class MainRepository @Inject constructor(private val itemDao: ItemDao) {
     suspend fun updateItem(item: Item){
         itemDao.updateItem(item)
     }
+    fun getAllNotes(){
+        itemDao.getNotes()
+    }
 
-    val getNotes = flow {
+    val getNotesByDate = flow {
+        val list = itemDao.getNotesByDates(date)
+        emit(list)
+    }.flowOn(Dispatchers.IO)
+
+    val getAllNotes = flow {
         val list = itemDao.getNotesByDates(date)
         emit(list)
     }.flowOn(Dispatchers.IO)

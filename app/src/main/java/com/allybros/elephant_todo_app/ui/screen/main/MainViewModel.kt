@@ -1,6 +1,5 @@
 package com.allybros.elephant_todo_app.ui.screen.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.allybros.elephant_todo_app.db.Item
@@ -49,53 +48,50 @@ class MainViewModel
     private val _formattedDate = MutableStateFlow(mCalendar.getFormattedDate())
     val formattedDateStateFlow = _formattedDate.asStateFlow()
 
+    init {
+        getNotesByDate(_formattedDate.value)
+    }
 
     fun addItem(item: Item) {
         viewModelScope.launch {
-            Log.d("ADDED", item.toString())
             repository.addItem(item)
+            getNotesByDate(_formattedDate.value)
         }
     }
 
     fun completeItem(item: Item) {
         viewModelScope.launch {
-            Log.d("Completed", item.toString())
             repository.updateItem(item)
-            getNotes(_formattedDate.value)
+            getNotesByDate(_formattedDate.value)
         }
     }
-
 
     fun deleteItem(item: Item) {
         viewModelScope.launch {
-            Log.d("DELETED", item.toString())
             repository.deleteItem(item)
-            getNotes(_formattedDate.value)
+            getNotesByDate(_formattedDate.value)
         }
     }
-
 
     fun updateItem(item: Item) {
         viewModelScope.launch {
-            Log.d("UPDATED", item.toString())
             repository.updateItem(item)
+            getNotesByDate(_formattedDate.value)
         }
     }
 
-    fun getNotes(date: String) {
+    private fun getNotesByDate(date: String) {
         repository.date = date
         viewModelScope.launch {
-            repository.getNotes.collect { item ->
+            repository.getNotesByDate.collect { item ->
                 _taskListLiveData.value = item
                     .sortedBy { it.time }
                     .sortedByDescending { it.hasTime }
                     .sortedBy { it.isComplete }
                 _doneTaskListLiveData.value = item.filter { it.isComplete == true }
-                item.forEach { Log.d("ITEMS: ", it.toString()) }
             }
         }
     }
-
 
     fun onDatePicked(
         pickedDay: Int,
@@ -108,20 +104,10 @@ class MainViewModel
         mCalendar.set(Calendar.MONTH, pickedMonth)
         mCalendar.set(Calendar.YEAR, pickedYear)
 
-        getNotes(_formattedDate.value)
+        getNotesByDate (_formattedDate.value)
         _dayNameLabel.value = mCalendar.getDayName().plus(",")
         _dayAndMonthLabel.value = mCalendar.getDay().toString().plus(" " + mCalendar.getMonthName())
     }
-
-    fun onForwardButtonClicked() {
-        mCalendar.nextDay()
-        onDatePicked(
-            mCalendar.getDay(),
-            mCalendar.getMonth(),
-            mCalendar.getYear()
-        )
-    }
-
     fun setUpdatedItem(item: Item) {
         _updatedItem.value = item
     }
@@ -134,6 +120,14 @@ class MainViewModel
 
     fun onBackButtonClicked() {
         mCalendar.previousDay()
+        onDatePicked(
+            mCalendar.getDay(),
+            mCalendar.getMonth(),
+            mCalendar.getYear()
+        )
+    }
+    fun onForwardButtonClicked() {
+        mCalendar.nextDay()
         onDatePicked(
             mCalendar.getDay(),
             mCalendar.getMonth(),

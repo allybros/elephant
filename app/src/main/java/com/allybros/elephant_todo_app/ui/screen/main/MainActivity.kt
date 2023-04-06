@@ -14,13 +14,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.rounded.Done
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +35,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -48,7 +49,6 @@ import java.util.*
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -73,10 +73,10 @@ fun MainScreen(
     val dayNameLabelStateFlow by viewModel.dayNameLabelStateFlow.collectAsState()
     val dayAndMonthLabelStateFlow by viewModel.dayAndMonthLabelStateFlow.collectAsState()
     val formattedDateStateFlow by viewModel.formattedDateStateFlow.collectAsState()
-
+    val context = LocalContext.current
 
     val datePickerDialog = elephantDatePickerDialog(
-        LocalContext.current,
+        context,
         callback = { pickedDay, pickedMonth, pickedYear ->
             viewModel.onDatePicked(
                 pickedDay,
@@ -90,12 +90,11 @@ fun MainScreen(
         AddDialog(
             setShowDialog = { viewModel.showAddDialog(it) },
             date = formattedDateStateFlow,
-            buttonClicked = {
-                if (it.uid != null) {
-                    viewModel.updateItem(it)
-                } else if (it.note?.isNotBlank() == true) {
-                    viewModel.addItem(it)
-                    viewModel.getNotes(dayAndMonthLabelStateFlow)
+            buttonClicked = { item->
+                if (item.uid != null) {
+                    viewModel.updateItem(item)
+                } else if (item.note?.isNotBlank() == true) {
+                    viewModel.addItem(item)
                 }
             },
             updateItem = viewModel.updatedItemStateFlow.value
@@ -129,78 +128,121 @@ fun MainScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(modifier = Modifier.padding(paddingValues)) {
-            items(taskList, key = { taskList: Item-> taskList.uid!! }) { item ->
-                val dismissState = rememberDismissState()
-
-                if (dismissState.isDismissed(DismissDirection.EndToStart)) {
-                    viewModel.deleteItem(item)
+        
+        if (taskList.isEmpty()){
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    ElephantListEmptyView()
                 }
+            }
+        } else {
+            LazyColumn(modifier = Modifier.padding(paddingValues)) {
+                items(taskList, key = { taskList: Item-> taskList.uid!! }) { item ->
+                    val dismissState = rememberDismissState()
 
-                SwipeToDismiss(
-                    modifier = Modifier.animateItemPlacement(),
-                    state = dismissState,
-                    directions = setOf(
-                        DismissDirection.EndToStart
-                    ),
-                    dismissThresholds = { direction ->
-                        FractionalThreshold(if (direction == DismissDirection.EndToStart) 0.1f else 0.05f)
-                    },
-                    background = {
-                        val color by animateColorAsState(
-                            when (dismissState.targetValue) {
-                                DismissValue.Default -> MaterialTheme.colors.background
-                                else -> MaterialTheme.colors.primary
-                            }
-                        )
-                        val alignment = Alignment.CenterEnd
-                        val icon = Icons.Filled.Delete
+                    context.setupNotification(item)
 
-                        val scale by animateFloatAsState(
-                            if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
-                        )
+                    if (dismissState.isDismissed(DismissDirection.EndToStart)) {
+                        item.isComplete = true
+                        context.setupNotification(item)
+                        viewModel.deleteItem(item)
+                    }
 
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(color)
-                                .padding(horizontal = 20.dp),
-                            contentAlignment = alignment
-                        ) {
-                            if(dismissState.targetValue != DismissValue.Default){
-                                Icon(
-                                    icon,
-                                    contentDescription = "Delete Icon",
-                                    modifier = Modifier.scale(scale)
-                                )
-                            }
-
-                        }
-                    },
-                    dismissContent = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateItemPlacement()
-                        ) {
-                            NoteRow(
-                                item = item,
-                                onCheckedChangedListener = {
-                                    viewModel.completeItem(item)
-                                },
-                                onTextClicked = {
-                                    viewModel.setUpdatedItem(item)
-                                    viewModel.showAddDialog(true)
+                    SwipeToDismiss(
+                        modifier = Modifier.animateItemPlacement(),
+                        state = dismissState,
+                        directions = setOf(
+                            DismissDirection.EndToStart
+                        ),
+                        dismissThresholds = { direction ->
+                            FractionalThreshold(if (direction == DismissDirection.EndToStart) 0.1f else 0.05f)
+                        },
+                        background = {
+                            val color by animateColorAsState(
+                                when (dismissState.targetValue) {
+                                    DismissValue.Default -> MaterialTheme.colors.background
+                                    else -> Purple650
                                 }
                             )
+                            val alignment = Alignment.CenterEnd
+                            val icon = Icons.Filled.Delete
+
+                            val scale by animateFloatAsState(
+                                if (dismissState.targetValue == DismissValue.Default) 0.75f else 1f
+                            )
+
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(color)
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = alignment
+                            ) {
+                                if(dismissState.targetValue != DismissValue.Default){
+                                    Icon(
+                                        icon,
+                                        contentDescription = "Delete Icon",
+                                        modifier = Modifier.scale(scale),
+                                        tint = if(isSystemInDarkTheme()) Color.White else Color.Black
+                                    )
+                                }
+
+                            }
+                        },
+                        dismissContent = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .animateItemPlacement()
+                            ) {
+
+                                Card(
+                                    elevation = animateDpAsState(
+                                        if (dismissState.dismissDirection != null) 4.dp else 0.dp
+                                    ).value
+                                ) {
+                                    NoteRow(
+                                        item = item,
+                                        onCheckedChangedListener = {
+                                            viewModel.completeItem(item)
+                                            context.setupNotification(item)
+                                        },
+                                        onTextClicked = {
+                                            viewModel.setUpdatedItem(item)
+                                            viewModel.showAddDialog(true)
+                                        }
+                                    )
+                                }
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }
-    viewModel.getNotes(formattedDateStateFlow)
+}
+
+@Composable
+fun ElephantListEmptyView() {
+    Icon(
+        imageVector = Icons.Rounded.Done,
+        contentDescription = "Empty list icon",
+        tint = vectorColors()
+    )
+    Text(
+        text = stringResource(R.string.emptyList),
+        fontSize = 20.sp,
+        color = MaterialTheme.colors.primary,
+        modifier = Modifier
+            .padding(vertical = 24.dp, horizontal = 12.dp),
+        fontFamily = FontFamily.Serif
+    )
 }
 
 fun onBackClicked(

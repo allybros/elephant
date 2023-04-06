@@ -10,5 +10,8 @@
     <color name="white">#FFFFFFFF</color>
 
 
+    <color name="icon_background">#7F396D</color>
+
+
     <color name="background">#121212</color>
 </resources>

@@ -118,7 +118,6 @@ fun AddDialog(
                     item.time = time
                     item.isComplete = updateItem?.isComplete
                     item.hasTime = time.isNotBlank()
-                    if (time.isNotBlank()) item.hasTime = true
                     Button(
                         onClick = {
                             isFirstClick = true
