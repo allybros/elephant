@@ -5,7 +5,7 @@
     <string name="enterNewTask">Yeni Görev</string>
     <string name="tasks">" Görev"</string>
     <string name="save">Kaydet</string>
-    <string name="newTaskHint">Yeni ne var :)</string>
+    <string name="newTaskHint">Bugün başka ne yapalım?</string>
     <string name="clearTimer">Bildirimi Kaldır</string>
     <string name="done">" Tamamlandı"</string>
     <string name="errorEmptyError">Boş görev olamaz.</string>
