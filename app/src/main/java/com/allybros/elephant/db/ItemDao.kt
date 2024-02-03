@@ -14,7 +14,7 @@ import androidx.room.Update
 @Dao
 interface ItemDao {
 
-    @Query("SELECT * FROM item where date >= :dayStart and date <= :dayEnd")
+    @Query("SELECT * FROM item where date >= :dayStart and date < :dayEnd")
     suspend fun getNotesByDates(dayStart: Long, dayEnd: Long): List<Item>
 
     @Query("SELECT * FROM item")
