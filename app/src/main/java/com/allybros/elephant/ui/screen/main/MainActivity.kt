@@ -46,6 +46,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.allybros.elephant.R
 import com.allybros.elephant.db.Item
 import com.allybros.elephant.ui.dialogs.AddDialog
+import com.allybros.elephant.ui.dialogs.InfoDialog
 import com.allybros.elephant.ui.theme.*
 import com.allybros.elephant.util.*
 import dagger.hilt.android.AndroidEntryPoint
@@ -73,7 +74,8 @@ fun MainScreen(
 ) {
     val taskList by viewModel.taskListStateFlow.collectAsState()
     val doneTaskList by viewModel.doneTaskListStateFlow.collectAsState()
-    val dialogStateStateFlow by viewModel.dialogStateStateFlow.collectAsState()
+    val addDialogStateStateFlow by viewModel.addDialogStateStateFlow.collectAsState()
+    val infoDialogStateStateFlow by viewModel.infoDialogStateStateFlow.collectAsState()
     val dayNameLabelStateFlow by viewModel.dayNameLabelStateFlow.collectAsState()
     val dayAndMonthLabelStateFlow by viewModel.dayAndMonthLabelStateFlow.collectAsState()
     val activeDateStateFlow by viewModel.activeDateStateFlow.collectAsState()
@@ -86,11 +88,11 @@ fun MainScreen(
         }
     )
 
-    if (dialogStateStateFlow) {
+    if (addDialogStateStateFlow) {
         AddDialog(
-            setShowDialog = { viewModel.showAddDialog(it) },
+            setShowDialog = { viewModel.changeAddDialogState(it) },
             date = activeDateStateFlow.time.time,
-            buttonClicked = { item->
+            buttonClicked = { item ->
                 if (item.uid != null) {
                     viewModel.updateItem(item)
                 } else if (item.note?.isNotBlank() == true) {
@@ -99,6 +101,10 @@ fun MainScreen(
             },
             updateItem = viewModel.updatedItemStateFlow.value
         )
+    }
+
+    if (infoDialogStateStateFlow) {
+        InfoDialog(setShowDialog = { viewModel.changeInfoDialogState(it) })
     }
 
     Scaffold(
@@ -121,15 +127,16 @@ fun MainScreen(
             ElephantBottomBar(
                 addNew = {
                     viewModel.setUpdatedItem(Item())
-                    viewModel.showAddDialog(true)
+                    viewModel.changeAddDialogState(true)
                 },
                 taskCount = "${taskList.size - doneTaskList.size}" + stringResource(R.string.tasks) +
-                        " ${doneTaskList.size}" + stringResource(R.string.done)
+                        " ${doneTaskList.size}" + stringResource(R.string.done),
+                onInfoButtonClicked = { viewModel.changeInfoDialogState(true) }
             )
         }
     ) { paddingValues ->
-        
-        if (taskList.isEmpty()){
+
+        if (taskList.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -138,13 +145,14 @@ fun MainScreen(
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     ElephantListEmptyView()
                 }
             }
         } else {
             LazyColumn(modifier = Modifier.padding(paddingValues)) {
-                items(taskList, key = { taskList: Item-> taskList.uid!! }) { item ->
+                items(taskList, key = { taskList: Item -> taskList.uid!! }) { item ->
                     val dismissState = rememberDismissState()
 
                     context.setupNotification(item)
@@ -185,12 +193,12 @@ fun MainScreen(
                                     .padding(horizontal = 20.dp),
                                 contentAlignment = alignment
                             ) {
-                                if(dismissState.targetValue != DismissValue.Default){
+                                if (dismissState.targetValue != DismissValue.Default) {
                                     Icon(
                                         icon,
                                         contentDescription = "Delete Icon",
                                         modifier = Modifier.scale(scale),
-                                        tint = if(isSystemInDarkTheme()) Color.White else Color.Black
+                                        tint = if (isSystemInDarkTheme()) Color.White else Color.Black
                                     )
                                 }
 
@@ -217,7 +225,7 @@ fun MainScreen(
                                         },
                                         onTextClicked = {
                                             viewModel.setUpdatedItem(item)
-                                            viewModel.showAddDialog(true)
+                                            viewModel.changeAddDialogState(true)
                                         }
                                     )
                                 }
@@ -283,7 +291,7 @@ fun elephantDatePickerDialog(
         mContext,
         { _: DatePicker, pickedYear: Int, pickedMonth: Int, pickedDay: Int ->
             val pickedDateCalendar = Calendar.getInstance()
-            pickedDateCalendar.set(pickedYear, pickedMonth, pickedDay,0,0,0)
+            pickedDateCalendar.set(pickedYear, pickedMonth, pickedDay, 0, 0, 0)
             callback.invoke(pickedDateCalendar.time.time)
         }, mYear, mMonth, mDay
     )
@@ -333,7 +341,7 @@ fun NoteRow(
                         style = TextStyle(textDecoration = textDecoration.value),
                     )
                     Text(
-                        text = (if(item.hasTime == true) item.date?.timeText() else "")!!,
+                        text = (if (item.hasTime == true) item.date?.timeText() else "")!!,
                         fontSize = 16.sp,
                         color = MaterialTheme.colors.primary,
                         fontFamily = FontFamily.Serif,
@@ -382,7 +390,8 @@ fun ElephantCheckbox(
 @Composable
 fun ElephantBottomBar(
     addNew: () -> Unit,
-    taskCount: String
+    taskCount: String,
+    onInfoButtonClicked: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -404,15 +413,21 @@ fun ElephantBottomBar(
                         .weight(1.25f),
                     fontFamily = FontFamily.Serif
                 )
-                Image(
-                    painter = painterResource(R.drawable.elephant_icon),
-                    contentDescription = "logo",
-                    colorFilter = ColorFilter.tint(vectorColors()),
+                Button(
+                    onClick = { onInfoButtonClicked() },
                     modifier = Modifier
                         .size(36.dp)
-                        .weight(0.5f)
-                )
-                Box(modifier = Modifier.weight(1.25f)){
+                        .weight(0.5f),
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colors.background),
+                    elevation = ButtonDefaults.elevation(0.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.elephant_icon),
+                        contentDescription = "logo",
+                        colorFilter = ColorFilter.tint(vectorColors())
+                    )
+                }
+                Box(modifier = Modifier.weight(1.25f)) {
                     AddNew { addNew.invoke() }
                 }
             }

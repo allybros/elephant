@@ -28,8 +28,11 @@ class MainViewModel
     private var _doneTaskListLiveData = MutableStateFlow<List<Item>>(listOf())
     var doneTaskListStateFlow = _doneTaskListLiveData.asStateFlow()
 
-    private var _dialogState = MutableStateFlow(false)
-    var dialogStateStateFlow = _dialogState.asStateFlow()
+    private var _addDialogState = MutableStateFlow(false)
+    var addDialogStateStateFlow = _addDialogState.asStateFlow()
+
+    private var _infoDialogState = MutableStateFlow(false)
+    var infoDialogStateStateFlow = _infoDialogState.asStateFlow()
 
     private val _dayNameLabel = MutableStateFlow(_activeDate.value.getDayName().plus(","))
     var dayNameLabelStateFlow = _dayNameLabel.asStateFlow()
@@ -108,10 +111,16 @@ class MainViewModel
         _updatedItem.value = item
     }
 
-    fun showAddDialog(
+    fun changeAddDialogState(
         it: Boolean
     ) {
-        _dialogState.value = it
+        _addDialogState.value = it
+    }
+
+    fun changeInfoDialogState(
+        it: Boolean
+    ) {
+        _infoDialogState.value = it
     }
 
     fun onBackButtonClicked() {

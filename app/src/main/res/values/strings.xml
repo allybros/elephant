@@ -10,5 +10,5 @@
     <string name="errorEmptyError">Task can not be empty.</string>
     <string name="emptyList">Task list is empty today.
         Let\'s do something today.</string>
-
+    <string name="info_text">Elephant, your go-to app for simplifying your daily agenda. Swiftly jot down tasks, set deadlines, and prioritize with ease using the clean and user-friendly design. Experience seamless task management, mark completed duties, and boost productivity.</string>
 </resources>
