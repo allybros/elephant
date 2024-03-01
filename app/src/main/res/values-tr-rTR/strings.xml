@@ -12,4 +12,5 @@
     <string name="emptyList">Bugün görev listesi boş.
         Hadi bugün bir şeyler yapalım.</string>
     <string name="info_text">Elephant, günlük ajandanızı basitleştirmeniz için güvenilir bir arkadaşınız. Elephant uygulaması ile yapılacaklar listenizi hızlıca not alabilir, son tarihleri belirleyebilir ve temiz ve kullanıcı dostu tasarım sayesinde görevlerinizi kolayca düzenleyebilirsiniz. Sorunsuz görev yönetimi deneyimi yaşayın, tamamlanan görevleri işaretleyin ve üretkenliğin tadını çıkarın. Elephant, sadece bir uygulama değil; görev listeleriniz için kolaylık ve verimlilik sağlayan bir hafıza yardımcısıdır.</string>
+    <string name="team_name">Ally Bros v%1$s</string>
 </resources>
