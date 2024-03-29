@@ -1,11 +1,12 @@
-# Elephant To Do App
+# Elephant To-Do: Daily Planner
 
 A free to do App for Android. The Elephant is a to do application have excellent ui. 
 It is light size and easy use to do app. Ally Bros implemented their point of view for to do apps.
 
 As a free software, you can use the source code of Elephant. For detail please see Apache License Conditions.
 
-![elephant_screenshot](https://user-images.githubusercontent.com/24457904/230448796-b798a297-8cbf-47d1-98cd-b0c5f43fbbd9.png)
+![photo_2024-03-29_18-47-59](https://github.com/allybros/elephant/assets/24457904/4588a0bd-77cc-4728-825a-ce4494d0f55e)
+
 
 ## 🌟 Features
 
