@@ -17,23 +17,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.allybros.elephant.BuildConfig
 import com.allybros.elephant.R
 import com.allybros.elephant.ui.screen.main.vectorColors
-
 
 /**
  * Created by orcun on 28.02.2024
  */
 @Composable
-fun InfoDialog (setShowDialog: (Boolean) -> Unit) {
+fun InfoDialog(
+    setShowDialog: (Boolean) -> Unit,
+    mainText: String,
+    bottomText: String
+) {
 
     Dialog(onDismissRequest = { setShowDialog(false) }) {
         Card(
@@ -69,11 +70,10 @@ fun InfoDialog (setShowDialog: (Boolean) -> Unit) {
                         color = MaterialTheme.colors.secondaryVariant,
                         fontSize = 16.sp,
                         fontFamily = FontFamily.Serif,
-                        text = stringResource(R.string.info_text),
+                        text = mainText,
                         textAlign = TextAlign.Center,
                     )
                 }
-                val versionName = BuildConfig.VERSION_NAME
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -85,7 +85,7 @@ fun InfoDialog (setShowDialog: (Boolean) -> Unit) {
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Serif,
                         fontWeight = FontWeight.Bold,
-                        text = stringResource(R.string.team_name, versionName),
+                        text = bottomText,
                         textAlign = TextAlign.Center,
                     )
                 }

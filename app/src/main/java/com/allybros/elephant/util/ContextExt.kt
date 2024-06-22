@@ -1,6 +1,8 @@
 package com.allybros.elephant.util
 
 import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -19,13 +21,24 @@ fun Context.setupNotification(item: Item) {
         putExtra(INTENT_EXTRA_DESCRIPTION, item.note)
     }.let { intent ->
         if (Build.VERSION.SDK_INT > 30)
-            item.uid.let { uid-> PendingIntent.getBroadcast(this, uid!!, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE) }
+            item.uid.let { uid ->
+                PendingIntent.getBroadcast(
+                    this, uid!!, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                )
+            }
         else
-            item.uid.let { uid-> PendingIntent.getBroadcast(this, uid!!, intent, PendingIntent.FLAG_MUTABLE) }
+            item.uid.let { uid ->
+                PendingIntent.getBroadcast(
+                    this,
+                    uid!!,
+                    intent,
+                    PendingIntent.FLAG_MUTABLE
+                )
+            }
     }
 
-    if (item.hasTime == true && item.isComplete == false && item.date != null){
+    if (item.hasTime == true && item.isComplete == false && item.date != null) {
         if (item.date!! >= Calendar.getInstance().timeInMillis) {
             alarmMgr.setExact(
                 AlarmManager.RTC_WAKEUP,
@@ -35,5 +48,22 @@ fun Context.setupNotification(item: Item) {
         }
     } else {
         alarmMgr.cancel(alarmIntent)
+    }
+}
+
+fun Context.createNotificationChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(
+            NOTIFICATION_CHANNEL_ID,
+            NOTIFICATION_CHANNEL_NAME,
+            importance
+        ).apply {
+            description = NOTIFICATION_DESCRIPTION
+        }
+        val notificationManager: NotificationManager =
+            this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
+
     }
 }

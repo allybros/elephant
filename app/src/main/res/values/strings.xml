@@ -12,4 +12,8 @@
         Let\'s do something today.</string>
     <string name="info_text">Elephant, your go-to app for simplifying your daily agenda. Swiftly jot down tasks, set deadlines, and prioritize with ease using the clean and user-friendly design. Experience seamless task management, mark completed duties, and boost productivity.</string>
     <string name="team_name">Ally Bros v%1$s</string>
+    <string name="open_settings_info_text">The notification permission not grant to Elephant. Elephant can not send notifications. Please grant the permission in settings.</string>
+    <string name="open_notification_permission_text">The Notification is important for Elephant. Please grant the permission.</string>
+    <string name="open_elephant_settings">Open Elephant settings</string>
+    <string name="request_permission">Request permission</string>
 </resources>

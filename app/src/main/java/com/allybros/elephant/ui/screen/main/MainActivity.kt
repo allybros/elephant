@@ -1,7 +1,10 @@
 package com.allybros.elephant.ui.screen.main
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.DatePicker
 import androidx.activity.ComponentActivity
@@ -14,17 +17,51 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Card
+import androidx.compose.material.Checkbox
+import androidx.compose.material.CheckboxDefaults
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.SwipeToDismiss
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.rounded.Done
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberDismissState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -32,6 +69,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -42,21 +80,36 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.allybros.elephant.BuildConfig
 import com.allybros.elephant.R
 import com.allybros.elephant.db.Item
 import com.allybros.elephant.ui.dialogs.AddDialog
 import com.allybros.elephant.ui.dialogs.InfoDialog
-import com.allybros.elephant.ui.theme.*
-import com.allybros.elephant.util.*
+import com.allybros.elephant.ui.dialogs.PermissionRequestDialog
+import com.allybros.elephant.ui.theme.Elephant_todo_appTheme
+import com.allybros.elephant.ui.theme.Purple100
+import com.allybros.elephant.ui.theme.Purple200
+import com.allybros.elephant.ui.theme.Purple650
+import com.allybros.elephant.ui.theme.Purple700
+import com.allybros.elephant.util.createNotificationChannel
+import com.allybros.elephant.util.getDay
+import com.allybros.elephant.util.getMonth
+import com.allybros.elephant.util.getYear
+import com.allybros.elephant.util.setupNotification
+import com.allybros.elephant.util.timeText
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.*
+import java.util.Calendar
+import java.util.Date
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        createNotificationChannel()
         setContent {
             Elephant_todo_appTheme {
                 Surface(color = MaterialTheme.colors.background) {
@@ -79,7 +132,25 @@ fun MainScreen(
     val dayNameLabelStateFlow by viewModel.dayNameLabelStateFlow.collectAsState()
     val dayAndMonthLabelStateFlow by viewModel.dayAndMonthLabelStateFlow.collectAsState()
     val activeDateStateFlow by viewModel.activeDateStateFlow.collectAsState()
+    val showDialog = remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    EventListener {
+        when (it) {
+            Lifecycle.Event.ON_RESUME -> {
+                if (isNotificationNotAllowed(context)) {
+                    showDialog.value = true
+                }
+            }
+
+            else -> { /* This is empty */
+            }
+        }
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        PermissionRequestDialog(context = context, showDialog = showDialog)
+    }
 
     val datePickerDialog = elephantDatePickerDialog(
         context,
@@ -104,7 +175,11 @@ fun MainScreen(
     }
 
     if (infoDialogStateStateFlow) {
-        InfoDialog(setShowDialog = { viewModel.changeInfoDialogState(it) })
+        InfoDialog(
+            setShowDialog = { viewModel.changeInfoDialogState(it) },
+            stringResource(R.string.info_text),
+            stringResource(R.string.team_name, BuildConfig.VERSION_NAME)
+        )
     }
 
     Scaffold(
@@ -259,7 +334,6 @@ fun onBackClicked(
     viewModel: MainViewModel
 ) {
     viewModel.onBackButtonClicked()
-
 }
 
 fun onForwardClicked(
@@ -410,14 +484,14 @@ fun ElephantBottomBar(
                     color = MaterialTheme.colors.primary,
                     modifier = Modifier
                         .padding(start = 16.dp)
-                        .weight(1.25f),
+                        .weight(1.30f),
                     fontFamily = FontFamily.Serif
                 )
                 Button(
                     onClick = { onInfoButtonClicked() },
                     modifier = Modifier
-                        .size(36.dp)
-                        .weight(0.5f),
+                        .weight(0.4f)
+                        .wrapContentSize(),
                     colors = ButtonDefaults.buttonColors(MaterialTheme.colors.background),
                     elevation = ButtonDefaults.elevation(0.dp)
                 ) {
@@ -427,8 +501,8 @@ fun ElephantBottomBar(
                         colorFilter = ColorFilter.tint(vectorColors())
                     )
                 }
-                Box(modifier = Modifier.weight(1.25f)) {
-                    AddNew { addNew.invoke() }
+                Box(modifier = Modifier.weight(1.30f)) {
+                    AddNew(modifier = Modifier.align(Alignment.CenterEnd)) { addNew.invoke() }
                 }
             }
         }
@@ -543,11 +617,11 @@ fun vectorColors(): Color =
 
 
 @Composable
-fun AddNew(onClicked: () -> Unit) {
+fun AddNew(modifier: Modifier = Modifier, onClicked: () -> Unit) {
     OutlinedButton(
         onClick = { onClicked.invoke() },
         border = null,
-        modifier = Modifier.wrapContentSize(Alignment.Center)
+        modifier = modifier.wrapContentSize(Alignment.Center)
     ) {
         Icon(
             imageVector = Icons.Filled.Add,
@@ -564,3 +638,28 @@ fun AddNew(onClicked: () -> Unit) {
         )
     }
 }
+
+@Composable
+fun EventListener(onEvent: (event: Lifecycle.Event) -> Unit) {
+
+    val eventHandler = rememberUpdatedState(newValue = onEvent)
+    val lifecycleOwner = rememberUpdatedState(newValue = LocalLifecycleOwner.current)
+
+    DisposableEffect(lifecycleOwner.value) {
+        val lifecycle = lifecycleOwner.value.lifecycle
+        val observer = LifecycleEventObserver { _, event ->
+            eventHandler.value(event)
+        }
+
+        lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
+}
+
+private fun isNotificationNotAllowed(context: Context): Boolean =
+    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            != PackageManager.PERMISSION_GRANTED)
